@@ -1,0 +1,12 @@
+{
+  "release": "2026-11-26-v4",
+  "bundledPresets": 47,
+  "features": [
+    "same-page-capture-guide",
+    "real-preset-thumbnails",
+    "fixed-viewport-header-credits",
+    "dynamic-and-long-sequences",
+    "recursive-radios",
+    "fire-revision"
+  ]
+}
