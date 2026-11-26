@@ -28,6 +28,7 @@ foreach ($page in @('index.html','capture.html')) {
   $html = [IO.File]::ReadAllText($file)
   $html = [regex]::Replace($html, '((?:src|href)=")([^"?]+\.(?:js|css))(?:\?[^" ]*)?"', {
     param($match)
+    if ($match.Groups[2].Value -match '^(https?:|//)') { return $match.Value }
     $asset = Join-Path $ProjectPath $match.Groups[2].Value
     if (!(Test-Path -LiteralPath $asset -PathType Leaf)) { return $match.Value }
     $hash = (Get-FileHash -LiteralPath $asset -Algorithm SHA256).Hash.Substring(0,12).ToLowerInvariant()
