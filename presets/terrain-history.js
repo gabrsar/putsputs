@@ -15,7 +15,7 @@ const levels=Array.from({length:bandCount},(_,i)=>{
 const loud=levels.length?Math.max(...levels):0;
 const HISTORY=24,RATE=8,COLS=32,WIDTH=1500,LENGTH=4200;
 if(!s.g){
-  s.g=p.createGraphics(Math.max(64,Math.floor(w*(a.renderScale??1))),Math.max(64,Math.floor(h*(a.renderScale??1))),p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>s.g.remove();
+  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>s.g.remove();
   s.rows=[];s.objects=[];s.lastSample=-10;s.lastSpawn=-10;s.nextSpawn=t+6;s.previous=0;
 }
 // Resolução da malha independente das bandas: sem colunas demarcando frequências.

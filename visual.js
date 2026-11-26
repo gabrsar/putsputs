@@ -13,7 +13,7 @@ if(!a.groups){p.background(2,3,10);return;}
 const keys=Object.keys(a.groups).sort((x,y)=>a.groups[x].low-a.groups[y].low);
 if(s.g && s.keySignature!==keys.join(',')){s.dispose();s.g=null;}
 if(!s.g){
-  s.g=p.createGraphics(Math.max(64,Math.round(p.width*(a.renderScale??1))),Math.max(64,Math.round(p.height*(a.renderScale??1))),p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);
+  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);
   const canvas=p.canvas;
   const initial=()=>({yaw:0,pitch:.95,zoom:1,panX:0,panY:0});
   s.camera=initial();s.drag=null;

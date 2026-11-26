@@ -1,5 +1,5 @@
 {
-  "release": "2026-11-26-v4",
+  "release": "2026-11-26-v5",
   "bundledPresets": 47,
   "features": [
     "same-page-capture-guide",
@@ -7,6 +7,21 @@
     "fixed-viewport-header-credits",
     "dynamic-and-long-sequences",
     "recursive-radios",
-    "fire-revision"
+    "fire-revision",
+    "compact-mobile-ui",
+    "automatic-language",
+    "adaptive-rendering",
+    "seven-free-samples",
+    "capture-recovery",
+    "animated-unmute"
+  ],
+  "sampleTracks": 7,
+  "languages": [
+    "en",
+    "zh-CN",
+    "hi",
+    "es",
+    "ar",
+    "pt-BR"
   ]
 }

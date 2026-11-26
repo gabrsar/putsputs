@@ -13,7 +13,7 @@ p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
 const DUAL=false;
 if(!s.g){
-  s.g=p.createGraphics(Math.max(64,Math.round(w*(a.renderScale??1))),Math.max(64,Math.round(h*(a.renderScale??1))),p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>s.g.remove();
+  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>s.g.remove();
   s.orbits=Array.from({length:DUAL?2:1},(_,i)=>({x:.1+i*.0002,y:0,z:0,points:[],channel:i}));
   s.clock=0;s.particleClock=0;s.low=0;s.high=0;s.mid=0;s.power=0;s.rotation=0;s.hue=195;s.impact=0;
   s.particles=[];s.active=64;s.warmed=false;

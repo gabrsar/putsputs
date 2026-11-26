@@ -1,5 +1,6 @@
 (() => {
  const $=id=>document.getElementById(id),body=document.body;
+ const sampleCredits=$('sample-credits');if(sampleCredits)for(const track of Object.values(window.PutsTracks||{})){const row=document.createElement('li'),link=document.createElement('a');link.href=track.source;link.textContent=track.name;row.append(link);sampleCredits.append(row);}
  const categories={organic:'Orgânico',geometry:'Geometria',worlds:'Mundos',lounge:'Lounge',science:'Ciência',classic:'AVS',local:'Seus presets'};
  const palette={organic:'#ba8bc9',geometry:'#84b4ad',worlds:'#b6c880',lounge:'#cc906c',science:'#8fa3cf',classic:'#ac9ac5',local:'#a3be83'};
  let favorites=new Set(),cards=new Map(),dirty=false,draftTimer;
@@ -15,18 +16,22 @@
   try{localStorage.setItem('avs-palco-mode',next);}catch{}window.dispatchEvent(new Event('resize'));
  }
  document.querySelectorAll('[data-mode-switch]').forEach(b=>b.onclick=()=>setMode(b.dataset.modeSwitch));
- $('source-toggle').onclick=()=>{const open=$('source-panel').hidden;$('source-panel').hidden=!open;$('source-toggle').setAttribute('aria-expanded',String(open));};
+ document.querySelectorAll('[data-close-panel]').forEach(b=>b.onclick=()=>{setMode('discover');document.querySelector('[data-mode-switch=discover]').focus();});
+ function sourcePanel(open){if(!open&&$('source-panel').contains(document.activeElement))$('source-toggle').focus();$('source-panel').hidden=!open;$('source-toggle').setAttribute('aria-expanded',String(open));$('track-picker').setAttribute('aria-expanded',String(open));}
+ $('source-toggle').onclick=()=>sourcePanel($('source-panel').hidden);$('track-picker').onclick=()=>sourcePanel($('source-panel').hidden);$('source-close').onclick=()=>sourcePanel(false);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')sourcePanel(false);});
+ document.addEventListener('pointerdown',e=>{if(!$('source-panel').hidden&&!e.target.closest('#source-panel,#source-toggle,#track-picker'))sourcePanel(false);});
  $('examples-tab').onclick=()=>$('example-track').focus();
  $('library-toggle').onclick=()=>{$('library-dialog').showModal();};
  $('library-close').onclick=()=>$('library-dialog').close();
  $('library-dialog').addEventListener('click',event=>{if(event.target===$('library-dialog')){const r=event.target.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)event.target.close();}});
  $('deck-prev').onclick=()=>$('preset-prev').click();$('deck-next').onclick=()=>$('preset-next').click();
  $('preset-hold').onclick=()=>{if(window.presetLibrary.shuffling)window.presetLibrary.hold();else $('shuffle-presets').click();};
- function sequence(){const running=window.presetLibrary.shuffling;$('preset-hold').textContent=running?'Ⅱ Pausar troca':'▶ Retomar troca';$('preset-hold').setAttribute('aria-pressed',String(!running));$('sequence-state').textContent=running?'Troca automática':'Visual fixado';}
+ function sequence(){const running=window.presetLibrary.shuffling;$('preset-hold').textContent=running?'Ⅱ Pausar troca':'▶ Retomar troca';$('preset-hold').setAttribute('aria-label',running?'Pausar troca de visuais':'Retomar troca de visuais');$('preset-hold').setAttribute('aria-pressed',String(!running));$('sequence-state').textContent=running?'Troca automática':'Visual fixado';}
  document.addEventListener('avs-sequence-changed',sequence);
  // Capture before preset-specific listeners: app shortcuts never reach the camera or scripts.
  document.addEventListener('keydown',event=>{
-  if(event.repeat||event.ctrlKey||event.altKey||event.metaKey||event.shiftKey||event.target.closest('input,textarea,select,[contenteditable],.ace_editor')||$('library-dialog').open)return;
+  if(event.repeat||event.ctrlKey||event.altKey||event.metaKey||event.shiftKey||event.target.closest('button,a,summary,input,textarea,select,[contenteditable],.ace_editor')||$('library-dialog').open||$('capture-guide').open)return;
   const target={ArrowLeft:'deck-prev',ArrowRight:'deck-next',KeyF:'full',Space:'preset-hold'}[event.code];
   if(target){event.preventDefault();event.stopImmediatePropagation();$(target).click();}
  },true);
@@ -40,11 +45,11 @@
   $('preset-count').textContent=entries.length;$('enabled-count').textContent=entries.filter(e=>e.enabled).length+' de '+entries.length+' na sessão';
   const fragment=document.createDocumentFragment();cards.clear();let count=0;
   for(const entry of entries){
-   const family=category(entry);if(filter==='favorites'&&!favorites.has(entry.value))continue;if(!['all','favorites'].includes(filter)&&family!==filter)continue;if(query&&!((entry.name+' '+entry.text).toLocaleLowerCase().includes(query)))continue;
+   const family=category(entry);if(filter==='favorites'&&!favorites.has(entry.value))continue;if(!['all','favorites'].includes(filter)&&family!==filter)continue;if(query&&!((entry.name+' '+entry.text+' '+(window.PutsI18n?.t(title(entry.name))||'')+' '+(window.PutsI18n?.t(entry.text)||'')).toLocaleLowerCase().includes(query)))continue;
    const card=document.createElement('article');card.className='preset-card';card.dataset.active=String(entry.value===$('preset').value);card.dataset.enabled=String(entry.enabled);
    const pick=document.createElement('button');pick.className='preview-pick';pick.setAttribute('aria-label','Ver '+entry.name);pick.title=entry.text;
    const art=document.createElement('div');art.className='preset-art';art.style.setProperty('--art-color',palette[family]);art.setAttribute('aria-hidden','true');window.AvsPreviews?.register(art,entry);
-   const name=document.createElement('span');name.className='preset-card-name';name.textContent=title(entry.name);
+   const name=document.createElement('span');name.className='preset-card-name';if(entry.value.startsWith('local:'))name.setAttribute('data-i18n-skip','');name.textContent=title(entry.name);
    const tag=document.createElement('span');tag.className='preset-card-tag';tag.textContent=categories[family];pick.append(art,name,tag);
    pick.onclick=()=>{window.presetLibrary.load(entry.value);$('library-dialog').close();};
    const label=document.createElement('label');label.className='preset-enable';const check=document.createElement('input');check.type='checkbox';check.checked=entry.enabled;check.setAttribute('aria-label','Incluir '+entry.name+' na sessão');check.onchange=()=>window.presetLibrary.setEnabled(entry.value,check.checked);label.append(check,document.createTextNode('Na sessão'));
@@ -56,12 +61,13 @@
  function updateSelected(){
   const selected=window.presetLibrary.entries().find(e=>e.value===$('preset').value);$('favorite-preset').disabled=!selected;
   $('favorite-preset').setAttribute('aria-pressed',String(favorites.has($('preset').value)));
-  if(!selected)return;$('visual-title').textContent=title(selected.name);$('visual-family').textContent=categories[category(selected)].toUpperCase();
+  if(!selected)return;$('visual-title').toggleAttribute('data-i18n-skip',selected.value.startsWith('local:'));$('visual-title').textContent=title(selected.name);$('visual-family').textContent=categories[category(selected)].toUpperCase();
   for(const [value,card]of cards)card.dataset.active=String(value===selected.value);
  }
  $('preset-search').oninput=renderLibrary;$('preset-category').onchange=renderLibrary;
  $('presets-enable-all').onclick=()=>window.presetLibrary.setAllEnabled(true);$('presets-disable-all').onclick=()=>window.presetLibrary.setAllEnabled(false);
  document.addEventListener('avs-library-changed',renderLibrary);
+ document.addEventListener('puts-language-change',()=>{renderLibrary();updateSelected();});
  document.addEventListener('avs-preset-loaded',event=>{dirty=false;clearTimeout(draftTimer);updateSelected();try{localStorage.setItem('avs-last-preset',event.detail.value);}catch{}if(body.dataset.mode==='studio')$('watch-script').checked=false;});
  document.addEventListener('avs-preset-draft',()=>{$('visual-title').textContent='Novo preset';$('visual-family').textContent='SEU EXPERIMENTO';$('favorite-preset').disabled=true;stashDraft();});
  $('open-create').onclick=()=>{$('library-dialog').close();setMode('studio');$('local-new').click();};

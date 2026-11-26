@@ -97,3 +97,14 @@ histories. Preset code remains editable and importable.
 Computer audio opens an animated guide in the main page, then the native browser picker. Audio availability depends on browser and operating system; video-only captures are rejected with guidance. External capture hides file transport controls.
 
 Library cards render the actual preset code with one shared preview renderer, cache snapshots, and animate on pointer hover. Automatic timing supports musical/dynamic changes and exact intervals through 30 minutes. Credits live in the header; page scrolling is confined to panels.
+
+
+## Product interface
+
+The compact layout keeps the canvas and playback controls inside the mobile viewport, including landscape and safe areas. Play/Create open scrollable panels; the Visuals library and audio source picker remain separate contextual controls. The language menu detects browser preferences by default and persists an explicit choice locally. Code, filenames, personal presets and song titles stay unchanged.
+
+Sample music includes seven unmodified Kevin MacLeod tracks under CC BY 4.0. See `assets/audio/LICENSE.txt` and the in-app credits. Audio files load only when selected; the initial silent visual uses the existing precomputed Cipher analysis. Tap the animated sound prompt to start actual audio playback.
+
+Automatic rendering limits pixel density and backs off expensive WebGL resolution after sustained slow frames. The preset library renders only nearby thumbnails and reuses cached images; desktop hover previews are capped at 12 fps. Higher quality can be selected explicitly in Play.
+
+Computer/tab audio requires HTTPS and a browser that exposes screen capture with an audio track. The source must be selected by the user in the native browser picker with Share audio enabled. Firefox/mobile/OS combinations may not offer this; local music files remain available. Capture cancellation keeps the existing audio source. Shared audio is analyzed without connecting it to the speakers again, avoiding echoes.
