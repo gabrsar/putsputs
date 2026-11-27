@@ -1,3 +1,4 @@
+// @putsputs-sharp-canvas
 // HANDDRAWING / sismógrafo à mão em uma folha de sulfite.
 // Uma única linha: a caneta percorre a folha nos dois sentidos; a tinta fica no lugar e desvanece.
 // A portadora representa o pico espectral dominante em câmera lenta (não é pitch detection).
@@ -81,7 +82,7 @@ try{
  c.fillStyle='#fdfdfb';c.fillRect(px,py,pw,ph);
  c.shadowBlur=0;c.shadowOffsetY=0;
  c.beginPath();c.rect(px+pw*.035,py+ph*.04,pw*.93,ph*.92);c.clip();
- c.strokeStyle='rgba(49,48,46,.83)';c.lineWidth=Math.max(.8,Math.min(1.2,pw/1050));c.lineJoin='round';c.lineCap='round';
+ c.lineWidth=1.05+Math.min(.35,pw/3000);c.lineJoin='round';c.lineCap='round';
  // Batch adjoining samples by age: stationary history with a smooth graphite fade.
  for(let first=0;first<pen.points.length;first+=24){
   const end=Math.min(pen.points.length,first+24),age=pen.time-pen.points[first].time;

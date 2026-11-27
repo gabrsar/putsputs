@@ -124,7 +124,7 @@ $('stop').onclick=()=>{disconnect();message('Áudio parado.')};$('demo').onclick
 $('file').onclick=()=>$('upload').click();$('upload').onchange=async e=>{const f=e.target.files[0];if(!f)return;disconnect();const ticket=generation;try{await init();if(ticket!==generation)return;url=URL.createObjectURL(f);media=new Audio(url);media.loop=false;media.onended=()=>{if(ticket===generation)message('Música encerrada. Abra outro arquivo para continuar.')};source=context.createMediaElementSource(media);source.connect(analyser);source.connect(detailAnalyser);stereoAnalysis.connect(source);source.connect(outputGain);await media.play();if(ticket===generation){mode='live';window.avsPlayer?.fileStarted(f.name);message('')}}catch(err){if(ticket===generation){disconnect();message(err.message)}}e.target.value=''};
 $('fft').onchange=resizeFFT;
 let drawCode,state={},sketch;
-let directWebGL=false, canBlend=true;
+let directWebGL=false, canBlend=true, sharpCanvas=false;
 a.presentWebGL=(canvas,overlay=false)=>{
  if(canvas.parentElement===$('stage')&&canvas.classList.contains('direct-webgl-stage'))return;
  canvas.classList.add('direct-webgl-stage');
@@ -139,11 +139,14 @@ function resetAutoQuality(){autoScale=1;slowFrameTime=0;}
 function setRenderQuality(p){
  const quality=qualityControl?.value||'auto';
  const screenDensity=Math.min(2,Math.max(1,window.devicePixelRatio||1));
- const density=quality==='ultra'?2:quality==='detail'?screenDensity:1;
+ const area=Math.max(1,p.width*p.height);
+ const sharpDensity=Math.max(1,Math.min(Math.max(1.5,screenDensity),Math.sqrt(3200000/area)));
+ const density=quality==='ultra'?2:quality==='detail'?screenDensity:
+  sharpCanvas&&quality!=='performance'?sharpDensity:1;
  if(p.pixelDensity()!==density)p.pixelDensity(density);
  a.pixelDensity=density;
  const budget=touchScreen.matches?360000:1400000;
- const nativeScale=Math.min(1,Math.sqrt(budget/Math.max(1,p.width*p.height)));
+ const nativeScale=Math.min(1,Math.sqrt(budget/area));
  a.renderScale=quality==='auto'?Math.max(.4,nativeScale*autoScale):
   ({performance:.55,balanced:.85,detail:screenDensity,ultra:2})[quality]||1;
  a.drawFinishedShader=quality==='performance'?null:window.drawFinishedShader;
@@ -171,12 +174,12 @@ function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s
  if(blendable&&canBlend&&sketch?.canvas&&drawCode&&window.visualTransition){
   // During the dissolve, the existing compositor draws both presets into its 2D layers.
   if(directWebGL)$('stage').querySelector('.direct-webgl-stage')?.remove();
-  window.visualTransition.begin(sketch.canvas,{fn:drawCode,state,canBlend,directWebGL});
+  window.visualTransition.begin(sketch.canvas,{fn:drawCode,state,canBlend,directWebGL,sharpCanvas});
  }else{
   window.visualTransition?.cancel();
   disposeCurrentState();
  }
- directWebGL=direct;canBlend=blendable;drawCode=fn;state={};frameRenderSamples.length=0;a.renderFrameMs=a.gpuFrameMs=undefined;resetAutoQuality();window.avsInputs?.reset(sketch?.canvas?sketch:null);if(sketch?.canvas){sketch.canvas.setAttribute('aria-label','Animação que reage ao áudio. Clique para usar mouse e teclado.');sketch.background(0);}$('error').textContent='';try{localStorage.setItem('avs-code',codeEditor.getValue())}catch{}return true}catch(e){$('error').textContent=e.message;return false}}
+ directWebGL=direct;canBlend=blendable;sharpCanvas=code.startsWith('// @putsputs-sharp-canvas');drawCode=fn;state={};frameRenderSamples.length=0;a.renderFrameMs=a.gpuFrameMs=undefined;resetAutoQuality();window.avsInputs?.reset(sketch?.canvas?sketch:null);if(sketch?.canvas){sketch.canvas.setAttribute('aria-label','Animação que reage ao áudio. Clique para usar mouse e teclado.');sketch.background(0);}$('error').textContent='';try{localStorage.setItem('avs-code',codeEditor.getValue())}catch{}return true}catch(e){$('error').textContent=e.message;return false}}
 for(const name of Object.keys(presets))$('preset').add(new Option(name,name));
 $('preset').onchange=()=>{codeEditor.setValue(presets[$('preset').value]);apply()};
 try{codeEditor.setValue(localStorage.getItem('avs-code')||Object.values(presets)[0])}catch{codeEditor.setValue(Object.values(presets)[0])}
@@ -288,7 +291,7 @@ else new p5(p=>{
   const analysisTime=a.time,analysisDt=a.dt,speed=Number($('visual-speed')?.value)||1;
   visualTime+=analysisDt*speed;a.time=visualTime;a.dt=analysisDt*speed;
   const frameStarted=performance.now(), frameState=state, blending=window.visualTransition.active;
-  if(drawCode){try{if(directWebGL&&!blending){a.directWebGL=true;try{drawCode(p,a,state);}finally{a.directWebGL=false;}}else window.visualTransition.render(p,a,()=>{p.push();try{drawCode(p,a,state)}finally{p.pop();}});}catch(e){$('error').textContent=e.stack||e.message;disposeCurrentState();const previous=window.visualTransition.recover();drawCode=previous?.fn||null;state=previous?.state||{};directWebGL=previous?.directWebGL||false;canBlend=previous?.canBlend??true;}}
+  if(drawCode){try{if(directWebGL&&!blending){a.directWebGL=true;try{drawCode(p,a,state);}finally{a.directWebGL=false;}}else window.visualTransition.render(p,a,()=>{p.push();try{drawCode(p,a,state)}finally{p.pop();}});}catch(e){$('error').textContent=e.stack||e.message;disposeCurrentState();const previous=window.visualTransition.recover();drawCode=previous?.fn||null;state=previous?.state||{};directWebGL=previous?.directWebGL||false;canBlend=previous?.canBlend??true;sharpCanvas=previous?.sharpCanvas??false;}}
   if(drawCode&&!blending&&state===frameState&&measuredState===frameState){
    frameRenderSamples.push(performance.now()-frameStarted);
    if(frameRenderSamples.length>120)frameRenderSamples.shift();
