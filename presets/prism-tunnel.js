@@ -1,41 +1,23 @@
-// TÚNEL PRISMÁTICO / ecos retangulares, inspirado na linguagem visual do AVS.
-/* global p, a, s */
-const dt=Math.min(a.dt||1/60,.06),t=a.time;
-const bands=Object.values(a.groups||{}).sort((x,y)=>x.low-y.low);
-const clamp=v=>Math.max(0,Math.min(1,v));
-const intensity=g=>g&&g.enabled?(a.visualLevel?a.visualLevel(g.db??-120):clamp(((g.db??-120)+80)/55)):0;
-const strengths=bands.map(intensity);
-const loud=strengths.length?Math.max(...strengths):0;
-const region=(lo,hi)=>{const selected=strengths.filter((_,i)=>bands[i].low<hi&&bands[i].high>lo);return selected.reduce((n,x)=>n+x,0)/Math.max(1,selected.length);};
-const low=region(25,250);
-const high=region(4000,22000);
-const w=p.width,h=p.height;
-p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
-
-if(s.bandCount!==bands.length){s.frames=[];s.bandCount=bands.length;}
-s.frames ||= [];s.sample ??= -10;
-if(t-s.sample>1/10){s.frames.push({born:t,levels:[...strengths],power:loud});s.sample=t;}
-s.frames=s.frames.filter(frame=>t-frame.born<6);
-p.background(2,3,12,255*(1-Math.exp(-dt/.08)));
-s.center??={x:w/2,y:h/2};const targetX=w*(.5+Math.sin(t*.63)*low*.23+(a.music?.flow?.x||0)*.10),targetY=h*(.5+Math.cos(t*.49)*high*.22+(a.music?.trend||0)*.1);s.center.x+=(targetX-s.center.x)*(1-Math.exp(-dt/.20));s.center.y+=(targetY-s.center.y)*(1-Math.exp(-dt/.20));p.translate(s.center.x,s.center.y);p.noFill();p.blendMode(p.ADD);
-for(const frame of s.frames){
-  const age=(t-frame.born)/6,fade=Math.pow(1-age,2);
-  if(frame.power<.01)continue;
-  const radius=18+Math.pow(age,.88)*Math.hypot(w,h)*1.05;
-  p.push();p.rotate(t*.045+Math.sin(frame.born*.13)*.38);
-  for(let edge=0;edge<4;edge++){
-    const value=frame.levels[Math.floor(edge/4*frame.levels.length)]||0;
-    p.colorMode(p.HSB,360,100,100,255);
-    p.stroke((185+edge*28+frame.born*3+t*.8)%360,75,95,fade*frame.power*105);
-    p.strokeWeight(.8+value*1.3);p.beginShape();
-    for(let j=0;j<=32;j++){
-      const u=j/32,v=(frame.levels[Math.floor(u*(frame.levels.length-1))]||0)*12;
-      const x=(u*2-1)*radius,y=-radius-v;
-      const angle=edge*Math.PI/2;
-      p.vertex(x*Math.cos(angle)-y*Math.sin(angle),x*Math.sin(angle)+y*Math.cos(angle));
-    }
-    p.endShape();
-  }
-  p.pop();
+// Solid octagonal corridor, projected from 3D and shaded from far to near.
+const t=a.time||0, size=Math.min(p.width,p.height), segments=24, sides=8;
+const bass=a.bass||0, spectrum=a.spectrum||[];
+const turn=t*.28, travel=(t*3)%1;
+function ring(z){
+ const scale=size*1.9/z, bend=t*.55+z*.17;
+ const x=p.width*.5+Math.sin(bend)*size*.17;
+ const y=p.height*.5+Math.cos(bend*.83)*size*.13;
+ return Array.from({length:sides},(_,i)=>{const angle=i*Math.PI*2/sides+turn+z*.05;return [x+Math.cos(angle)*scale,y+Math.sin(angle)*scale];});
 }
-p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
+p.background(5,7,17);p.noStroke();p.colorMode(p.HSB,360,100,100);
+let far=ring(segments+1-travel);
+for(let j=segments;j>=0;j--){
+ const near=ring(Math.max(.1,j+1-travel));
+ for(let i=0;i<sides;i++){
+  const k=(i+1)%sides, energy=spectrum[Math.floor((i+1)*spectrum.length/20)]||0;
+  const light=Math.max(5,48-j*1.7)+(j%4===0?16:0)+bass*17+energy*28;
+  p.fill((205+i*17+j*2+t*9)%360,60,Math.min(100,light));
+  p.quad(...far[i],...far[k],...near[k],...near[i]);
+ }
+ far=near;
+}
+p.colorMode(p.RGB,255);

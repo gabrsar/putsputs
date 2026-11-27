@@ -1,6 +1,6 @@
 {
-  "release": "2026-11-26-v6",
-  "bundledPresets": 46,
+  "release": "2026-11-26-v7",
+  "bundledPresets": 47,
   "features": [
     "same-page-capture-guide",
     "real-preset-thumbnails",

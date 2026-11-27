@@ -23,10 +23,12 @@
     {"name": "Lissajous · néon XY", "path": "presets/lissajous.js", "text": "Waveform XY com ganho visual, persistência de fósforo, cores vivas e órbitas que respiram."},
     {name:'Moiré · interferência',path:'presets/moire.js',text:'Duas tramas de linhas revelam padrões de interferência ligados às bandas.'},
     {name:'Moiré Fluido · zoom e metamorfose',path:'presets/moire-fluid.js',text:'Moiré com espessura, cores, ângulos, zoom e proporções seguindo alvos aleatórios independentes e suaves.'},
-    {name:'Túnel prismático · AVS',path:'presets/prism-tunnel.js',text:'Seis segundos de ecos geométricos com o espectro nas bordas.'},
+    {name:'Túnel prismático · AVS',path:'presets/prism-tunnel.js',text:'Túnel de paredes sólidas, iluminadas pelo espectro.'},
+    {name:'Laser · estrelas de pista',path:'presets/club-lasers.js',text:'Estrelas e feixes giratórios respondem às bandas do áudio.'},
+    {name:'Sismógrafo 3D · órbita',path:'presets/seismograph-orbit.js',text:'Traços contínuos de graves, médios e agudos com câmera em órbita.'},
     {name:'Caleidoscópio · seda',path:'presets/kaleido-silk.js',text:'Seda que transborda a tela, rotação lenta, espessuras variáveis e blur leve.'},
     {name:'Caleidoscópio · vitral',path:'presets/kaleido-glass.js',text:'Peças de vidro colorido com bloom suave e bordas preservadas.'},
-    {"name": "Braseiro · fogo vivo", "path": "presets/doom-fire.js", "text": "Fogo de alta resolução com advecção longa, combustível por frequência, rajadas Perlin e brasas que sobem."},
+    {"name": "Braseiro · fogo vivo", "path": "presets/doom-fire.js", "text": "Fogo em resolução reduzida com advecção longa, combustível por frequência, rajadas Perlin e brasas que sobem."},
     {name:'Polar · tear espectral',path:'presets/polar-loom.js',text:'Observatório polar facetado, amostragem espelhada e doze segundos de memória.'},
     {"name": "Polar · rosas luminosas", "path": "presets/polar-rose.js", "text": "Rosas harmônicas com nervuras, bloom, centelhas e respiração musical. Detalhes surgem e somem com as frases."},
     {"name": "Color Mix · sirenes na noite", "path": "presets/color-additive.js", "text": "Reflexos vermelhos e azuis como luzes de polícia através de vidro, alternância musical e manchas de luz."},
@@ -46,7 +48,6 @@
     {"name": "Micélio · raízes por frequência", "path": "presets/organic-mycelium.js", "text": "Cada faixa tem sua raiz e cor. A energia faz crescer, picos bifurcam e mudanças de timbre desviam os ramos."},
     {name:'Lounge · veludo e vinho',path:'presets/wine-velvet.js',text:'Fitas rubi e ameixa, um fio dourado e movimento discreto.'},
     {"name": "Negroni · líquido em órbita", "path": "presets/negroni-amber.js", "text": "O copo balança, o líquido gira e as ondas batem nas paredes; âmbar, cobre e reflexos de gelo."},
-    {name:'Ambiente · brisa da sala de espera',path:'presets/waiting-room.js',text:'Planos suaves e discretos, sem flashes ou reação brusca ao som.'},
     {name:'Tapeçaria · espectrograma',path:'presets/spectral-weave.js',text:'Doze segundos em células de cor: frequência × tempo, com ataques destacados.'}
   ];
   const group=document.createElement('optgroup');group.label='Biblioteca · editáveis no WebStorm';

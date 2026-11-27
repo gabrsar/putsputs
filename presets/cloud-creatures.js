@@ -31,15 +31,18 @@ const forms=[
 if(!s.clouds){s.clouds=Array.from({length:22},(_,i)=>({x:((i%6)+rand(.05,.95))/6,y:.14+Math.floor(i/6)*.22+rand(-.025,.025),scale:rand(.075,.14)*(i<6?.70:1),seed:rand(0,10),points:forms[i%4].map(v=>[...v])}));s.form=0;s.next=20;}
 if(t>s.next||mouse.clicked||keys.pressed('KeyN')){s.form=(s.form+1)%4;s.next=t+22;}
 for(let i=0;i<s.clouds.length;i++){
- const cloud=s.clouds[i],size=Math.min(w,h)*cloud.scale*(1+low*.12),form=forms[(s.form+i)%4];
- cloud.x+=dt*(.005+trend*.002+clamp(mouse.vx||0,-500,500)*.000015);if(cloud.x>1.35)cloud.x=-.35;if(cloud.x<-.35)cloud.x=1.35;
- const x=cloud.x*w,y=cloud.y*h+Math.sin(t*.09+cloud.seed)*h*.025;
+ const cloud=s.clouds[i],layer=i%3, signal=[low,mid,high][layer];
+ cloud.phase=(cloud.phase??cloud.seed)+dt*(.20+layer*.18+signal*2);
+ const size=Math.min(w,h)*cloud.scale*(.9+signal*.48),form=forms[(s.form+i)%4];
+ const thickness=.72+signal*.85,opacity=.40+signal*.50;
+ cloud.x+=dt*(.009+layer*.007+signal*.065+trend*.002+clamp(mouse.vx||0,-500,500)*.000015);if(cloud.x>1.35)cloud.x=-.35;if(cloud.x<-.35)cloud.x=1.35;
+ const x=cloud.x*w,y=cloud.y*h+Math.sin(cloud.phase)*h*(.035+layer*.019+signal*.06);
  for(let j=0;j<form.length;j++){
   const v=cloud.points[j];for(let k=0;k<3;k++)v[k]+=(form[j][k]-v[k])*(1-Math.exp(-dt/3));
-  const xx=x+(v[0]+Math.sin(t*.20+j+cloud.seed)*.025)*size,yy=y+v[1]*size,r=size*v[2]*(1+mid*.04);
+  const xx=x+(v[0]+Math.sin(t*.20+j+cloud.seed)*.025)*size,yy=y+v[1]*size*thickness,r=size*v[2]*(1+mid*.04);
   const glow=c.createRadialGradient(xx-r*.15,yy-r*.22,r*.12,xx,yy,r*1.22);
   glow.addColorStop(0,'rgba(255,253,242,.78)');glow.addColorStop(.55,'rgba(249,248,241,.63)');glow.addColorStop(1,'rgba(243,247,248,0)');
-  c.fillStyle=glow;c.beginPath();c.arc(xx,yy,r*1.22,0,TAU);c.fill();
+  c.save();c.globalAlpha=opacity;c.translate(xx,yy);c.scale(1,thickness);c.translate(-xx,-yy);c.fillStyle=glow;c.beginPath();c.arc(xx,yy,r*1.22,0,TAU);c.fill();c.restore();
  }
 }
 if(a.showHUD)hint('N / clique: outra pareidolia · mouse: vento');

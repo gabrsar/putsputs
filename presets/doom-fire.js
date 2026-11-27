@@ -1,6 +1,6 @@
 // Braseiro · fogo vivo — Fogo de alta resolução com advecção longa, combustível por frequência, rajadas Perlin e brasas que sobem.
 /* global p, a, s */
-const dt=Math.max(0,Math.min(a.dt??1/60,.08)),t=a.time||0,w=p.width,h=p.height,TAU=Math.PI*2;
+const dt=Math.max(0,Math.min(a.dt??1/60,.08)),t=a.time||0,w=Math.max(1,Math.round(p.width*.55)),h=Math.max(1,Math.round(p.height*.55)),TAU=Math.PI*2;
 const clamp=(v,lo=0,hi=1)=>Math.max(lo,Math.min(hi,v));
 const rand=(lo=0,hi=1)=>a.rand?a.rand(lo,hi):lo+Math.random()*(hi-lo);
 const bands=Object.values(a.groups||{}).sort((x,y)=>x.low-y.low);
@@ -13,7 +13,7 @@ const wave=u=>{const v=a.waveform||[];return v.length?v[Math.min(v.length-1,Math
 const weather=Math.max(0,Math.sin(t*.11+(a.seed||1337)*.001));
 const layer=key=>{
  s.layers??={};let g=s.layers[key];
- if(!g){g=s.layers[key]=p.createGraphics(w,h);g.pixelDensity(a.pixelDensity??1);g.clear();s.dispose=()=>{for(const v of Object.values(s.layers))v.remove();};}
+ if(!g){g=s.layers[key]=p.createGraphics(w,h);g.pixelDensity(1);g.clear();s.dispose=()=>{for(const v of Object.values(s.layers))v.remove();};}
  if(g.width!==w||g.height!==h){const copy=g.get();g.resizeCanvas(w,h);g.image(copy,0,0,w,h);}
  return g;
 };
@@ -23,14 +23,14 @@ const present=(g,ttl=.7,bloom=4)=>{
  const c=trail.drawingContext;c.save();try{c.setTransform(trail.pixelDensity(),0,0,trail.pixelDensity(),0,0);c.globalCompositeOperation='copy';c.filter='blur(.35px)';c.drawImage(trail.canvas,0,0,w,h);}finally{c.restore();}
  trail.background(3,6,12,255*(1-Math.exp(-dt/ttl)));trail.image(g,0,0,w,h);
  p.blendMode(p.BLEND);p.colorMode(p.RGB,255);p.background(3,6,12);p.imageMode(p.CORNER);
- const ctx=p.drawingContext;ctx.save();try{ctx.filter='blur('+bloom+'px)';ctx.globalAlpha=.45;p.image(trail,0,0,w,h);ctx.filter='none';ctx.globalAlpha=1;p.image(trail,0,0,w,h);}finally{ctx.restore();}
+ const ctx=p.drawingContext;ctx.save();try{ctx.filter='blur('+bloom+'px)';ctx.globalAlpha=.45;p.image(trail,0,0,p.width,p.height);ctx.filter='none';ctx.globalAlpha=1;p.image(trail,0,0,p.width,p.height);}finally{ctx.restore();}
 };
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
 
 
 // Controlled cooling and turbulent advection keep the flame tips dark and irregular.
-const FW=Math.min(420,Math.max(256,Math.round(w*.36))),FH=256;
+const FW=Math.min(240,Math.max(112,Math.round(w*.36))),FH=144;
 const fuelAt=x=>{const pos=x/Math.max(1,FW-1)*Math.max(0,strengths.length-1),i=Math.floor(pos),f=pos-i;return value(i)*(1-f)+value(i+1)*f;};
 if(!s.heat||s.fw!==FW){
  s.fw=FW;s.heat=new Float32Array(FW*FH);s.next=new Float32Array(FW*FH);s.fire=p.createImage(FW,FH);s.tick=0;s.embers=[];
@@ -67,3 +67,4 @@ const g=fresh();g.smooth();g.image(s.fire,0,0,w,h);
 if(s.embers.length<60&&rand()<dt*(6+low*26))s.embers.push({x:rand(0,w),y:h*.96,age:0,speed:rand(30,90),seed:rand(0,100)});
 for(const e of s.embers){e.age+=dt;e.x+=Math.sin(t*.8+e.seed)*dt*13;e.y-=e.speed*dt;g.noStroke();g.fill(255,145,45,clamp(1-e.age/4)*190);g.circle(e.x,e.y,.7+low*1.5);}s.embers=s.embers.filter(e=>e.age<4&&e.y>0);
 present(g,.08,2.5);
+
