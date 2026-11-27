@@ -1,5 +1,5 @@
 // Shadertoy-style single Image pass, with audio supplied as iBands (bass, mid, treble).
-const fragment = `
+const fragment = `#version 300 es
 precision highp float;
 uniform vec3 iResolution;
 uniform float iTime;
@@ -13,32 +13,59 @@ float scan=pow(.5+.5*cos(z*5.-iTime*9.),6.);
 vec3 wall=.48+.42*cos(vec3(0.,2.,4.)+a+z*.19);
 fragColor=vec4(wall*(.19+tiles*.45+scan*(.3+iBands.x))*smoothstep(.02,.31,d),1.);
 }
-void main(){mainImage(gl_FragColor,gl_FragCoord.xy);}
+out vec4 outputColor;
+void main(){mainImage(outputColor,gl_FragCoord.xy);}
 `;
 if (!s.surface) {
-  s.surface = p.createGraphics(64, 64, p.WEBGL);
-  s.surface.pixelDensity(1);
-  s.program = s.surface.createShader(
-    'attribute vec3 aPosition; void main(){gl_Position=vec4(aPosition.xy*2.0-1.0,0.0,1.0);}',
-    fragment
-  );
-  s.dispose = () => s.surface.remove();
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl2');
+  if (!gl) throw new Error('WebGL 2 indisponível.');
+  const program = gl.createProgram();
+  const compile = (kind, code) => {
+    const shader = gl.createShader(kind);
+    gl.shaderSource(shader, code);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      const error = gl.getShaderInfoLog(shader);
+      gl.deleteShader(shader);
+      throw new Error(error);
+    }
+    gl.attachShader(program, shader);
+    gl.deleteShader(shader);
+  };
+  try {
+    compile(gl.VERTEX_SHADER, `#version 300 es
+void main(){
+  vec2 corner=vec2(float((gl_VertexID << 1) & 2),float(gl_VertexID & 2));
+  gl_Position=vec4(corner*2.0-1.0,0.0,1.0);
+}`);
+    compile(gl.FRAGMENT_SHADER, fragment);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+  } catch (error) {
+    gl.deleteProgram(program);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    throw error;
+  }
+  const resolution = gl.getUniformLocation(program, 'iResolution');
+  const time = gl.getUniformLocation(program, 'iTime');
+  const bands = gl.getUniformLocation(program, 'iBands');
+  s.surface = {canvas, gl, program, resolution, time, bands};
+  s.dispose = () => {
+    gl.deleteProgram(program);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+  };
 }
-const g = s.surface;
+const {canvas, gl, program, resolution, time, bands} = s.surface;
 const scale = Math.min(.65, a.renderScale ?? .65);
 const width = Math.max(1, Math.round(p.width * scale));
 const height = Math.max(1, Math.round(p.height * scale));
-if (g.width !== width || g.height !== height) g.resizeCanvas(width, height);
-g.shader(s.program);
-s.program.setUniform('iResolution', [width, height, 1]);
-s.program.setUniform('iTime', a.time || 0);
-s.program.setUniform('iBands', [a.bass || 0, a.mid || 0, a.treble || 0]);
-g.noStroke();
-g.beginShape(g.TRIANGLE_STRIP);
-g.vertex(0, 0);
-g.vertex(1, 0);
-g.vertex(0, 1);
-g.vertex(1, 1);
-g.endShape();
-p.imageMode(p.CORNER);
-p.image(g, 0, 0, p.width, p.height);
+if (canvas.width !== width) canvas.width = width;
+if (canvas.height !== height) canvas.height = height;
+gl.viewport(0, 0, width, height);
+gl.useProgram(program);
+gl.uniform3f(resolution, width, height, 1);
+gl.uniform1f(time, a.time || 0);
+gl.uniform3f(bands, a.bass || 0, a.mid || 0, a.treble || 0);
+gl.drawArrays(gl.TRIANGLES, 0, 3);
+p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);
