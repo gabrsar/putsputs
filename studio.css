@@ -187,3 +187,12 @@ html:fullscreen #visual-screen.ui-idle .preset-deck{opacity:0;transform:translat
 body>#stage.ambient-stage>.direct-webgl-stage{position:absolute;inset:0;display:block!important;width:100%!important;height:100%!important;pointer-events:none}
 
 body>#stage.ambient-stage:has(>.direct-webgl-overlay)>canvas:not(.direct-webgl-stage){position:relative;z-index:1}
+
+#preset-hold{position:relative}
+.sequence-ring{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--accent);pointer-events:none}
+.sequence-ring path{stroke-width:2;vector-effect:non-scaling-stroke}
+#shuffle-interval{width:clamp(66px,11vw,116px);min-width:0;height:36px;padding:4px 2px 4px 6px;font-size:12px}
+@media(max-width:420px){
+ .preset-deck{flex-wrap:wrap}
+ #shuffle-interval{height:32px;font-size:11px}
+}

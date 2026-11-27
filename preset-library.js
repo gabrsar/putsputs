@@ -71,12 +71,31 @@
     try{localStorage.setItem('avs-disabled-presets-v1',JSON.stringify([...disabled]));}catch{}
     bag=[];announceLibrary();
   }
-  let revision=0,loading=false,shuffle=false,nextAt=0,bag=[],lastSwitch=0,detector=null,changeFrames=0;
+  let revision=0,loading=false,shuffle=false,nextAt=0,bag=[],lastSwitch=0,pausedAt=null,detector=null,changeFrames=0;
   const shuffleButton=document.getElementById('shuffle-presets');
   const interval=document.getElementById('shuffle-interval');
+  const progress=document.getElementById('sequence-progress');
+  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+  function updateProgress(now){
+    const fraction=shuffle&&!reducedMotion.matches?Math.min(1,Math.max(0,((pausedAt??now)-lastSwitch)/(nextAt-lastSwitch))):0;
+    progress.setAttribute('stroke-dashoffset',String(1-fraction));
+  }
+  function syncClock(now){
+    if(!shuffle)return;
+    if(loading||document.hidden||window.avsPlayer?.isPaused){
+      pausedAt??=now;
+    }else if(pausedAt!==null){
+      const pausedFor=now-pausedAt;
+      lastSwitch+=pausedFor;nextAt+=pausedFor;pausedAt=null;
+    }
+  }
   const schedule=()=>{
-    lastSwitch=Date.now();
-    nextAt=interval.value==='dynamic'?Infinity:lastSwitch+Math.max(5000,Number(interval.value)*1000);
+    lastSwitch=performance.now();
+    pausedAt=null;
+    const duration=interval.value==='dynamic'?45000+Math.random()*75000:Math.max(5000,Number(interval.value)*1000);
+    nextAt=lastSwitch+duration;
+    syncClock(lastSwitch);
+    updateProgress(lastSwitch);
   };
   function musicalTurn(){
     if((interval.value!=='dynamic'&&!document.getElementById('shuffle-musical').checked)||typeof a==='undefined'||!a.features)return false;
@@ -90,7 +109,7 @@
     // Baseline tracks musical phrases, not individual frames.
     detector.db+=(f.db-detector.db)*.03;
     detector.shape=detector.shape.map((v,i)=>v+(f.shape[i]-v)*.03);
-    if(Date.now()-lastSwitch<9000){changeFrames=0;return false;}
+    if(performance.now()-lastSwitch<9000){changeFrames=0;return false;}
     if(changeFrames>=3){changeFrames=0;return true;}
     return false;
   }
@@ -104,7 +123,7 @@
     layout.dispatchEvent(new Event('change',{bubbles:true}));detector=null;changeFrames=0;
   }
   function announceSequence(){document.dispatchEvent(new CustomEvent('avs-sequence-changed',{detail:{shuffle}}));}
-  function stopShuffle(){shuffle=false;shuffleButton.textContent='Troca automática: desligada';shuffleButton.setAttribute('aria-pressed','false');announceSequence();}
+  function stopShuffle(){shuffle=false;pausedAt=null;updateProgress(performance.now());shuffleButton.textContent='Troca automática: desligada';shuffleButton.setAttribute('aria-pressed','false');announceSequence();}
   shuffleButton.onclick=()=>{
     if(!shuffle&&library.filter(entry=>!disabled.has(entryValue(entry))).length<2){description.textContent='Ative pelo menos dois presets para usar o shuffle.';return;}
     shuffle=!shuffle;shuffleButton.textContent='Troca automática: '+(shuffle?'ligada':'desligada');
@@ -115,13 +134,10 @@
     document.getElementById(id).addEventListener(event,stopShuffle,true);
   }
   setInterval(()=>{
-    if(!shuffle||loading||document.hidden||window.avsPlayer?.isPaused)return;
-    const phraseChange=interval.value==='dynamic'?musicalTurn():false;
-    // Dynamic mode changes on musical phrases; its safety ceiling is newly drawn each phrase.
-    if(interval.value==='dynamic'){
-      if(!Number.isFinite(nextAt))nextAt=lastSwitch+45000+Math.random()*75000;
-      if(!phraseChange&&Date.now()<nextAt)return;
-    }else if(Date.now()<nextAt)return;
+    const now=performance.now();
+    syncClock(now);
+    if(!shuffle||pausedAt!==null)return;
+    if(!(interval.value==='dynamic'&&musicalTurn())&&now<nextAt)return;
     if(!bag.length){
       bag=library.map(entryValue).filter(value=>value!==select.value&&!disabled.has(value));
       for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}
@@ -130,7 +146,12 @@
     const value=bag.pop();if(!value){schedule();return;}
     varyReading();select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));schedule();
   },500);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule();});
+  setInterval(()=>{
+    if(!shuffle)return;
+    const now=performance.now();
+    syncClock(now);updateProgress(now);
+  },100);
+  document.addEventListener('visibilitychange',()=>syncClock(performance.now()));
   const invalidate=()=>{revision++;loading=false};
   document.addEventListener('avs-editor-user-edit',()=>{stopShuffle();invalidate();});
   for(const [id,event]of [['run','click'],['codefile','change'],['reload-script','click'],['watch-script','change']]){

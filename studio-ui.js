@@ -33,7 +33,7 @@
  $('library-dialog').addEventListener('click',event=>{if(event.target===$('library-dialog')){const r=event.target.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)event.target.close();}});
  $('deck-prev').onclick=()=>$('preset-prev').click();$('deck-next').onclick=()=>$('preset-next').click();
  $('preset-hold').onclick=()=>{if(window.presetLibrary.shuffling)window.presetLibrary.hold();else $('shuffle-presets').click();};
- function sequence(){const running=window.presetLibrary.shuffling;$('preset-hold').textContent=running?'Ⅱ Pausar troca':'▶ Retomar troca';$('preset-hold').setAttribute('aria-label',running?'Pausar troca de visuais':'Retomar troca de visuais');$('preset-hold').setAttribute('aria-pressed',String(!running));$('sequence-state').textContent=running?'Troca automática':'Visual fixado';}
+ function sequence(){const running=window.presetLibrary.shuffling;$('preset-hold-label').textContent=running?'Ⅱ Pausar troca':'▶ Retomar troca';$('preset-hold').setAttribute('aria-label',running?'Pausar troca de visuais':'Retomar troca de visuais');$('preset-hold').setAttribute('aria-pressed',String(!running));$('sequence-state').textContent=running?'Troca automática':'Visual fixado';}
  document.addEventListener('avs-sequence-changed',sequence);
  // Capture before preset-specific listeners: app shortcuts never reach the camera or scripts.
  document.addEventListener('keydown',event=>{
