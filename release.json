@@ -1,6 +1,6 @@
 {
-  "release": "2026-11-26-v5",
-  "bundledPresets": 47,
+  "release": "2026-11-26-v6",
+  "bundledPresets": 46,
   "features": [
     "same-page-capture-guide",
     "real-preset-thumbnails",
@@ -13,9 +13,13 @@
     "adaptive-rendering",
     "seven-free-samples",
     "capture-recovery",
-    "animated-unmute"
+    "animated-unmute",
+    "anchored-audio-menu",
+    "tabbed-about",
+    "ambient-glass-canvas",
+    "prominent-playback"
   ],
-  "sampleTracks": 7,
+  "sampleTracks": 10,
   "languages": [
     "en",
     "zh-CN",

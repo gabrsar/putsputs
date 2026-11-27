@@ -40,6 +40,7 @@
 
   function time() {
     if (kind === 'preview') {
+      if(!preview)return 0;
       return Math.min(duration(), position + (paused ? 0 : (performance.now() - clock) / 1000));
     }
     return media?.currentTime || 0;
@@ -140,7 +141,7 @@
       stereoAnalysis.connect(source);
       source.connect(outputGain);
       gain(true);
-      element.src = './assets/audio/' + key + '.mp3';
+      element.src = tracks[key].file || './assets/audio/' + key + '.mp3';
       if (seek > 0) element.currentTime = Math.min(seek, tracks[key].duration - .1);
       await Promise.all([engineReady, element.play()]);
       if (ticket !== generation) return;
@@ -175,6 +176,7 @@
     picker.value = initialKey;
     muted = true;
     mode = 'demo';
+    if(tracks[initialKey].preview === false){updateUI();return;}
     previewLoad = new AbortController();
     updateUI();
     try {
@@ -263,12 +265,6 @@
     return playback;
   }
 
-  function playSelection() {
-    const playback = liveExample(picker.value);
-    $('source-close')?.click();
-    return playback;
-  }
-  $('play-example').onclick = playSelection;
   picker.onchange = () => liveExample(picker.value);
   if (previous) previous.onclick = () => step(-1);
   if (next) next.onclick = () => step(1);

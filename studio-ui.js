@@ -1,6 +1,6 @@
 (() => {
  const $=id=>document.getElementById(id),body=document.body;
- const sampleCredits=$('sample-credits');if(sampleCredits)for(const track of Object.values(window.PutsTracks||{})){const row=document.createElement('li'),link=document.createElement('a');link.href=track.source;link.textContent=track.name;row.append(link);sampleCredits.append(row);}
+ const sampleCredits=$('sample-credits');if(sampleCredits)for(const track of Object.values(window.PutsTracks||{})){const row=document.createElement('li'),link=document.createElement('a');link.href=track.source;link.textContent=track.name+' — '+track.author;const license=document.createElement('small');if(track.licenseUrl){const terms=document.createElement('a');terms.href=track.licenseUrl;terms.textContent=track.license;license.append(terms);}else license.textContent=track.license;row.append(link,license);sampleCredits.append(row);}
  const categories={organic:'Orgânico',geometry:'Geometria',worlds:'Mundos',lounge:'Lounge',science:'Ciência',classic:'AVS',local:'Seus presets'};
  const palette={organic:'#ba8bc9',geometry:'#84b4ad',worlds:'#b6c880',lounge:'#cc906c',science:'#8fa3cf',classic:'#ac9ac5',local:'#a3be83'};
  let favorites=new Set(),cards=new Map(),dirty=false,draftTimer;
@@ -17,8 +17,14 @@
  }
  document.querySelectorAll('[data-mode-switch]').forEach(b=>b.onclick=()=>setMode(b.dataset.modeSwitch));
  document.querySelectorAll('[data-close-panel]').forEach(b=>b.onclick=()=>{setMode('discover');document.querySelector('[data-mode-switch=discover]').focus();});
- function sourcePanel(open){if(!open&&$('source-panel').contains(document.activeElement))$('source-toggle').focus();$('source-panel').hidden=!open;$('source-toggle').setAttribute('aria-expanded',String(open));$('track-picker').setAttribute('aria-expanded',String(open));}
- $('source-toggle').onclick=()=>sourcePanel($('source-panel').hidden);$('track-picker').onclick=()=>sourcePanel($('source-panel').hidden);$('source-close').onclick=()=>sourcePanel(false);
+ let sourceAnchor=$('track-picker');
+ function placeSource(){const panel=$('source-panel');if(panel.hidden)return;const r=sourceAnchor.getBoundingClientRect(),gap=8,edge=8;const w=Math.min(470,innerWidth-edge*2);panel.style.width=w+'px';panel.style.left=Math.max(edge,Math.min(r.left,innerWidth-w-edge))+'px';panel.style.right='auto';const below=innerHeight-r.bottom-gap-edge,above=r.top-gap-edge;const down=below>=Math.min(panel.scrollHeight,260)||below>=above;panel.style.maxHeight=Math.max(100,down?below:above)+'px';panel.style.top=(down?r.bottom+gap:Math.max(edge,r.top-gap-panel.offsetHeight))+'px';}
+ function sourcePanel(open,anchor){if(anchor)sourceAnchor=anchor;if(!open&&$('source-panel').contains(document.activeElement))sourceAnchor.focus();$('source-panel').hidden=!open;$('source-toggle').setAttribute('aria-expanded',String(open));$('track-picker').setAttribute('aria-expanded',String(open));if(open)placeSource();}
+ for(const id of ['source-toggle','track-picker'])$(id).onclick=()=>sourcePanel($('source-panel').hidden||sourceAnchor!==$(id),$(id));$('source-close').onclick=()=>sourcePanel(false);
+ window.addEventListener('resize',placeSource);document.addEventListener('puts-language-change',()=>requestAnimationFrame(placeSource));
+ $('about-toggle').onclick=()=>{sourcePanel(false);$('about-dialog').showModal();};$('about-close').onclick=()=>$('about-dialog').close();
+ $('about-dialog').addEventListener('click',e=>{if(e.target!==$('about-dialog'))return;const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();});
+ document.querySelectorAll('[data-about-tab]').forEach(button=>button.onclick=()=>{document.querySelectorAll('[data-about-tab]').forEach(tab=>tab.setAttribute('aria-pressed',String(tab===button)));document.querySelectorAll('[data-about-panel]').forEach(panel=>panel.hidden=panel.dataset.aboutPanel!==button.dataset.aboutTab);});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')sourcePanel(false);});
  document.addEventListener('pointerdown',e=>{if(!$('source-panel').hidden&&!e.target.closest('#source-panel,#source-toggle,#track-picker'))sourcePanel(false);});
  $('examples-tab').onclick=()=>$('example-track').focus();
@@ -31,7 +37,7 @@
  document.addEventListener('avs-sequence-changed',sequence);
  // Capture before preset-specific listeners: app shortcuts never reach the camera or scripts.
  document.addEventListener('keydown',event=>{
-  if(event.repeat||event.ctrlKey||event.altKey||event.metaKey||event.shiftKey||event.target.closest('button,a,summary,input,textarea,select,[contenteditable],.ace_editor')||$('library-dialog').open||$('capture-guide').open)return;
+  if(event.repeat||event.ctrlKey||event.altKey||event.metaKey||event.shiftKey||event.target.closest('button,a,summary,input,textarea,select,[contenteditable],.ace_editor')||$('library-dialog').open||$('capture-guide').open||$('about-dialog').open)return;
   const target={ArrowLeft:'deck-prev',ArrowRight:'deck-next',KeyF:'full',Space:'preset-hold'}[event.code];
   if(target){event.preventDefault();event.stopImmediatePropagation();$(target).click();}
  },true);
@@ -87,4 +93,8 @@
  setMode(initial);renderLibrary();updateSelected();
  let remembered='file:presets/moire-fluid.js';try{const saved=localStorage.getItem('avs-last-preset');if(saved&&window.presetLibrary.entries().some(e=>e.value===saved))remembered=saved;}catch{}
  window.presetLibrary.load(remembered);if(initial!=='studio')$('shuffle-presets').click();sequence();
+// Cut a clear window in the veil; the real canvas fills the viewport behind the UI.
+ let maskFrame;function placeWindow(){cancelAnimationFrame(maskFrame);maskFrame=requestAnimationFrame(()=>{const rect=document.querySelector('.stage-shell').getBoundingClientRect(),style=document.documentElement.style;for(const [key,value]of Object.entries({left:rect.left,top:rect.top,width:rect.width,height:rect.height}))style.setProperty('--window-'+key,value+'px');});}
+ const windowObserver=new ResizeObserver(placeWindow);for(const el of [document.querySelector('.stage-shell'),document.querySelector('.app-header'),document.querySelector('.music-player')])windowObserver.observe(el);
+ window.addEventListener('resize',placeWindow);document.addEventListener('fullscreenchange',placeWindow);document.addEventListener('puts-language-change',placeWindow);placeWindow();
 })();

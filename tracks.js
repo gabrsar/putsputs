@@ -9,7 +9,10 @@
   ['disco-con-tutti','Disco con Tutti',236.352,'USUAN1200091'],
   ['itty-bitty-8-bit','Itty Bitty 8 Bit',193.824,'USUAN1100764'],
   ['the-descent','The Descent',191.765,'USUAN1200094'],
-  ['funkorama','Funkorama',201.456,'USUAN1100474']
+  ['funkorama','Funkorama',201.456,'USUAN1100474'],
+  ["carefree", "Carefree", 205, "USUAN1400037"],
+  ["electrodoodle", "Electrodoodle", 166, "USUAN1200079"],
+  ["night-of-the-owl", "Night of the Owl", 233, "USUAN1100597"]
  ];
  window.PutsTracks=Object.fromEntries(entries.map(([key,name,duration,isrc])=>[key,{
   name,duration,author,license,licenseUrl,

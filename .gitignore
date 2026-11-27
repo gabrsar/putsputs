@@ -6,3 +6,6 @@ Thumbs.db
 .env.*
 !.env.example
 *.log
+
+tracks.local.js
+assets/audio/local/

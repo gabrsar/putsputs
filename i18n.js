@@ -295,6 +295,37 @@ Biblioteca inválida.|Invalid library.|无效预设库。|अमान्य ल
 JSON sem uma lista presets.|JSON does not contain a preset list.|JSON 中没有预设列表。|JSON में प्रीसेट की सूची नहीं है।|El JSON no contiene una lista de presets.|لا يحتوي ملف JSON على قائمة بالإعدادات المسبقة.
 Abrir seletor de áudio|Open audio picker|打开音频选择器|ऑडियो चयन संवाद खोलें|Abrir selector de audio|فتح نافذة اختيار الصوت
 Prefiro um arquivo de música|Use a music file instead|使用音乐文件|संगीत फ़ाइल इस्तेमाल करें|Usar un archivo de música|أفضل استخدام ملف موسيقى
+
+Sobre o putsputs|About putsputs|关于 putsputs|putsputs के बारे में|Acerca de putsputs|حول putsputs
+Fechar sobre|Close About|关闭关于|परिचय बंद करें|Cerrar información|إغلاق المعلومات
+VEJA O SOM|SEE THE SOUND|看见声音|ध्वनि देखें|MIRA EL SONIDO|شاهد الصوت
+Sobre|About|关于|परिचय|Acerca de|حول
+Atalhos|Shortcuts|快捷键|शॉर्टकट|Atajos|الاختصارات
+Créditos|Credits|鸣谢|श्रेय|Créditos|الاعتمادات
+Informações|Information|信息|जानकारी|Información|معلومات
+Seu som, seu visual.|Your sound, your visual.|你的声音，你的视觉。|आपकी ध्वनि, आपका दृश्य।|Tu sonido, tu visual.|صوتك، وعرضك البصري.
+Escolha uma música para começar. Troque os visuais, ajuste o movimento e o brilho ou crie seu próprio preset.|Choose a track to begin. Switch visuals, adjust motion and brightness, or create your own preset.|选择一首音乐开始。切换视觉效果、调整运动与亮度，或创建自己的预设。|शुरू करने के लिए एक गीत चुनें। दृश्य बदलें, गति और चमक समायोजित करें या अपना प्रीसेट बनाएँ।|Elige una canción para empezar. Cambia los visuales, ajusta el movimiento y el brillo o crea tu propio preset.|اختر مقطعًا للبدء. بدّل العروض واضبط الحركة والسطوع أو أنشئ إعدادك الخاص.
+Seu áudio fica aqui.|Your audio stays here.|你的音频留在这里。|आपका ऑडियो यहीं रहता है।|Tu audio se queda aquí.|يبقى صوتك هنا.
+A análise acontece no navegador, sem gravar ou enviar seu áudio. Seus presets e preferências ficam neste dispositivo.|Analysis runs in your browser without recording or uploading audio. Your presets and preferences stay on this device.|分析在浏览器中进行，不录制或上传音频。预设和偏好保存在本设备上。|विश्लेषण ब्राउज़र में होता है, बिना ऑडियो रिकॉर्ड या अपलोड किए। आपके प्रीसेट और पसंद इसी डिवाइस पर रहते हैं।|El análisis ocurre en tu navegador sin grabar ni subir audio. Tus presets y preferencias se guardan en este dispositivo.|يتم التحليل في متصفحك دون تسجيل الصوت أو رفعه. تبقى إعداداتك وتفضيلاتك على هذا الجهاز.
+Para capturar o computador, use HTTPS e marque “Compartilhar áudio” no seletor do navegador. A disponibilidade depende do navegador e do sistema.|To capture computer audio, use HTTPS and enable “Share audio” in the browser picker. Availability depends on your browser and system.|要捕获电脑音频，请使用 HTTPS，并在浏览器选择器中勾选“分享音频”。可用性取决于浏览器和系统。|कंप्यूटर ऑडियो के लिए HTTPS इस्तेमाल करें और ब्राउज़र के चयन में “ऑडियो साझा करें” चालू करें। उपलब्धता ब्राउज़र और सिस्टम पर निर्भर है।|Para capturar el audio del ordenador, usa HTTPS y activa “Compartir audio” en el selector. La disponibilidad depende del navegador y del sistema.|لالتقاط صوت الكمبيوتر، استخدم HTTPS وفعّل «مشاركة الصوت» في منتقي المتصفح. يعتمد التوفر على المتصفح والنظام.
+Menos cliques, mais música.|Fewer clicks, more music.|更少点击，更多音乐。|कम क्लिक, अधिक संगीत।|Menos clics, más música.|نقرات أقل وموسيقى أكثر.
+Trocar visual|Change visual|切换视觉效果|दृश्य बदलें|Cambiar visual|تغيير العرض
+Pausar ou retomar a troca de visuais|Pause or resume visual cycling|暂停或继续自动切换|दृश्य बदलना रोकें या जारी रखें|Pausar o reanudar el cambio de visuales|إيقاف تبديل العروض مؤقتًا أو استئنافه
+Fechar painéis ou sair da tela cheia|Close panels or exit fullscreen|关闭面板或退出全屏|पैनल बंद करें या पूरी स्क्रीन से बाहर आएँ|Cerrar paneles o salir de pantalla completa|إغلاق اللوحات أو مغادرة ملء الشاشة
+Aplicar código no editor|Apply code in the editor|应用编辑器代码|संपादक में कोड लागू करें|Aplicar código en el editor|تطبيق الكود في المحرر
+Nos visuais 3D, arraste para mover a câmera. Os atalhos não interrompem a digitação no editor.|Drag to move the camera in 3D visuals. Shortcuts do not interrupt typing in the editor.|在 3D 视觉效果中拖动可移动相机。快捷键不会干扰编辑器中的输入。|3D दृश्यों में कैमरा घुमाने के लिए खींचें। शॉर्टकट संपादक में टाइपिंग को बाधित नहीं करते।|Arrastra para mover la cámara en los visuales 3D. Los atajos no interrumpen la escritura en el editor.|اسحب لتحريك الكاميرا في العروض ثلاثية الأبعاد. لا تتداخل الاختصارات مع الكتابة في المحرر.
+Música de gente de verdade.|Music made by real people.|真人创作的音乐。|असली लोगों का बनाया संगीत।|Música creada por personas.|موسيقى يصنعها أشخاص حقيقيون.
+Faixas de Kevin MacLeod (|Tracks by Kevin MacLeod (|Kevin MacLeod 的音乐（|Kevin MacLeod के गीत (|Canciones de Kevin MacLeod (|مقاطع من Kevin MacLeod (
+), sob|), under|），采用|), लाइसेंस|), bajo|)، بترخيص
+. MP3 originais, sem alterações.|. Original, unmodified MP3s.|。原始 MP3，未经修改。|. मूल MP3, बिना बदलाव।|. MP3 originales, sin cambios.|. ملفات MP3 أصلية دون تعديل.
+Feito com|Made with|制作工具|इनसे बनाया गया|Hecho con|صُنع باستخدام
+ e| and| 和| और| y| و
+. Inspirado no AVS do Winamp.|. Inspired by Winamp AVS.|。灵感来自 Winamp AVS。|. Winamp AVS से प्रेरित।|. Inspirado en AVS de Winamp.|. مستوحى من AVS في Winamp.
+
+Uma música, infinitos visuais.|One track, endless visuals.|一首音乐，无限视觉。|एक गीत, अनगिनत दृश्य।|Una canción, infinitos visuales.|مقطع واحد، عروض بصرية بلا حدود.
+Espaço|Space|空格|स्पेस|Espacio|مسافة
+
+Consulte a origem e a licença de cada faixa.|See the source and license for each track.|查看每首音乐的来源和许可。|हर गीत का स्रोत और लाइसेंस देखें।|Consulta el origen y la licencia de cada canción.|راجع مصدر كل مقطع وترخيصه.
 `.trim().split('\n').map(row => {
     const [source, ...translations] = row.split('|');
     return [source, translations];

@@ -3,7 +3,6 @@
   const description=document.getElementById('preset-description');
   const library=[
     {name:'★ Histórico 3D · visual.js',path:'visual.js',text:'Seu visual principal: 48 bandas, histórico e câmera manual.'},
-    {"name": "Rádios · frequência recursiva", "path": "presets/recursive-radios.js", "text": "Um rádio contém outro rádio no mostrador: sete níveis de recursão, grades de alto-falante, sintonia e vibração por frequência."},
     {"name": "Caleidoscópio · pétalas em transe", "path": "presets/kaleido-petals.js", "text": "Doze espelhos, ondas musicais, filamentos e rastros que alternam de densidade ao longo da frase."},
     {"name": "Caleidoscópio · mandala líquida", "path": "presets/kaleido-liquid.js", "text": "Espelhos de Perlin, filamentos cromáticos e memória com bloom; a música faz a mandala abrir e fechar."},
     {"name": "Sofá · trama pulsante", "path": "presets/couch-dancing-weave.js", "text": "Variação de tecido com deformação e pulsação intensas por graves, médios e waveform."},

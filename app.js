@@ -157,9 +157,9 @@ async function enterFullscreen(target){
     if(document.fullscreenElement===target)return;
     if(document.fullscreenElement)await document.exitFullscreen();
     await target.requestFullscreen();
-  }catch(e){if(target===$('visual-screen')){$('visual-screen').classList.add('immersive');$('full').setAttribute('aria-pressed','true');$('exit-full').hidden=false;window.dispatchEvent(new Event('resize'));}else message('Não foi possível abrir tela cheia: '+e.message)}
+  }catch(e){if(target===$('visual-screen')||target===document.documentElement){$('visual-screen').classList.add('immersive');$('full').setAttribute('aria-pressed','true');$('exit-full').hidden=false;window.dispatchEvent(new Event('resize'));}else message('Não foi possível abrir tela cheia: '+e.message)}
 }
-$('full').onclick=async()=>{if($('visual-screen').classList.contains('immersive')){$('visual-screen').classList.remove('immersive');$('full').setAttribute('aria-pressed','false');$('exit-full').hidden=true;window.dispatchEvent(new Event('resize'));return;}if(document.fullscreenElement=== $('visual-screen'))await document.exitFullscreen();else await enterFullscreen($('visual-screen'));};
+$('full').onclick=async()=>{if($('visual-screen').classList.contains('immersive')){$('visual-screen').classList.remove('immersive');$('full').setAttribute('aria-pressed','false');$('exit-full').hidden=true;window.dispatchEvent(new Event('resize'));return;}if(document.fullscreenElement)await document.exitFullscreen();else await enterFullscreen(document.documentElement);};
 $('full-lab').onclick=()=>enterFullscreen(document.documentElement);
 $('exit-full').onclick=async()=>{
   try{if($('visual-screen').classList.contains('immersive'))$('full').click();else if(document.fullscreenElement)await document.exitFullscreen()}
