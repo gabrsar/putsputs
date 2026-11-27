@@ -94,7 +94,7 @@
  const sharedParams=new URLSearchParams(location.search);
  const bundled=new Map(window.presetLibrary.entries().filter(entry=>entry.value.startsWith('file:')).map(entry=>[entry.value.replace(/^file:presets\//,'').replace(/\.js$/,''),entry.value]));
  const sharedPreset=bundled.get(sharedParams.get('preset'));
- if(sharedPreset?.startsWith('file:presets/shader-laser'))$('fps-pill').classList.remove('studio-only');
+ if(sharedPreset?.startsWith('file:presets/shader-'))$('fps-pill').classList.remove('studio-only');
  const settings=['visual-speed','visual-brightness','render-quality','preset-seed'];
  if(sharedPreset){
   for(const id of settings){
@@ -109,7 +109,7 @@
   if(!key){window.prompt('Escolha um visual integrado para compartilhar.');return;}
   const url=new URL(location.pathname,location.origin);
   url.searchParams.set('preset',key);
-  if(key==='shader-laser'&&sharedParams.get('renderer')==='webgl')url.searchParams.set('renderer','webgl');
+  if(key.startsWith('shader-')&&sharedParams.get('renderer')==='canvas')url.searchParams.set('renderer','canvas');
   for(const id of settings)url.searchParams.set(id,$(id).value);
   try{await navigator.clipboard.writeText(url.href);$('share-visual').textContent='Link copiado';}
   catch{window.prompt('Copie o link do visual:',url.href);}

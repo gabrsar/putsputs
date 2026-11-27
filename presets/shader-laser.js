@@ -1,3 +1,4 @@
+// @putsputs-direct-webgl
 // Shadertoy-style single Image pass, with audio supplied as iBands (bass, mid, treble).
 const fragment = `#version 300 es
 precision highp float;
@@ -92,12 +93,5 @@ if (query) {
   gl.endQuery(timer.TIME_ELAPSED_EXT);
   queries.push(query);
 }
-if (a.directWebGL) {
-  if (!canvas.isConnected) {
-    canvas.className = 'direct-webgl-stage';
-    canvas.setAttribute('aria-hidden', 'true');
-    document.getElementById('stage').append(canvas);
-  }
-} else {
-  p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);
-}
+if (a.directWebGL && a.presentWebGL) a.presentWebGL(canvas);
+else p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);

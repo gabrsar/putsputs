@@ -1,3 +1,4 @@
+// @putsputs-direct-webgl
 // Shadertoy-style single Image pass, with audio supplied as iBands (bass, mid, treble).
 const fragment = `#version 300 es
 precision highp float;
@@ -52,6 +53,7 @@ void main(){
   const bands = gl.getUniformLocation(program, 'iBands');
   s.surface = {canvas, gl, program, resolution, time, bands};
   s.dispose = () => {
+    canvas.remove();
     gl.deleteProgram(program);
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };
@@ -68,4 +70,5 @@ gl.uniform3f(resolution, width, height, 1);
 gl.uniform1f(time, a.time || 0);
 gl.uniform3f(bands, a.bass || 0, a.mid || 0, a.treble || 0);
 gl.drawArrays(gl.TRIANGLES, 0, 3);
-p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);
+if (a.directWebGL && a.presentWebGL) a.presentWebGL(canvas);
+else p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);

@@ -124,7 +124,13 @@ $('stop').onclick=()=>{disconnect();message('Áudio parado.')};$('demo').onclick
 $('file').onclick=()=>$('upload').click();$('upload').onchange=async e=>{const f=e.target.files[0];if(!f)return;disconnect();const ticket=generation;try{await init();if(ticket!==generation)return;url=URL.createObjectURL(f);media=new Audio(url);media.loop=false;media.onended=()=>{if(ticket===generation)message('Música encerrada. Abra outro arquivo para continuar.')};source=context.createMediaElementSource(media);source.connect(analyser);source.connect(detailAnalyser);stereoAnalysis.connect(source);source.connect(outputGain);await media.play();if(ticket===generation){mode='live';window.avsPlayer?.fileStarted(f.name);message('')}}catch(err){if(ticket===generation){disconnect();message(err.message)}}e.target.value=''};
 $('fft').onchange=resizeFFT;
 let drawCode,state={},sketch;
-let directWebGL=false;
+let directWebGL=false, canBlend=true;
+a.presentWebGL=canvas=>{
+ if(canvas.isConnected)return;
+ canvas.className='direct-webgl-stage';
+ canvas.setAttribute('aria-hidden','true');
+ $('stage').append(canvas);
+};
 const qualityControl=$('render-quality'),libraryDialog=$('library-dialog');
 const touchScreen=matchMedia('(pointer: coarse)');
 let autoScale=1,slowFrameTime=0;
@@ -157,7 +163,16 @@ function disposeCurrentState(){
 
 const frameRenderSamples = [];
 let measuredState;
-function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const direct=code.startsWith('// @putsputs-direct-webgl')||($('preset').value==='file:presets/shader-laser.js'&&new URLSearchParams(location.search).get('renderer')==='webgl');if(direct||directWebGL){window.visualTransition?.cancel();disposeCurrentState();}else if(sketch?.canvas&&drawCode&&window.visualTransition)window.visualTransition.begin(sketch.canvas,{fn:drawCode,state});else disposeCurrentState();directWebGL=direct;drawCode=fn;state={};frameRenderSamples.length=0;a.renderFrameMs=a.gpuFrameMs=undefined;resetAutoQuality();window.avsInputs?.reset(sketch?.canvas?sketch:null);if(sketch?.canvas){sketch.canvas.setAttribute('aria-label','Animação que reage ao áudio. Clique para usar mouse e teclado.');sketch.background(0);}$('error').textContent='';try{localStorage.setItem('avs-code',codeEditor.getValue())}catch{}return true}catch(e){$('error').textContent=e.message;return false}}
+function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const direct=code.startsWith('// @putsputs-direct-webgl')&&new URLSearchParams(location.search).get('renderer')!=='canvas';const blendable=!direct||/^file:presets\/shader-(laser(?:-direct)?|fire|tunnel)\.js$/.test($('preset').value);
+ if(blendable&&canBlend&&sketch?.canvas&&drawCode&&window.visualTransition){
+  // During the dissolve, the existing compositor draws both presets into its 2D layers.
+  if(directWebGL)state.surface?.canvas.remove();
+  window.visualTransition.begin(sketch.canvas,{fn:drawCode,state,canBlend,directWebGL});
+ }else{
+  window.visualTransition?.cancel();
+  disposeCurrentState();
+ }
+ directWebGL=direct;canBlend=blendable;drawCode=fn;state={};frameRenderSamples.length=0;a.renderFrameMs=a.gpuFrameMs=undefined;resetAutoQuality();window.avsInputs?.reset(sketch?.canvas?sketch:null);if(sketch?.canvas){sketch.canvas.setAttribute('aria-label','Animação que reage ao áudio. Clique para usar mouse e teclado.');sketch.background(0);}$('error').textContent='';try{localStorage.setItem('avs-code',codeEditor.getValue())}catch{}return true}catch(e){$('error').textContent=e.message;return false}}
 for(const name of Object.keys(presets))$('preset').add(new Option(name,name));
 $('preset').onchange=()=>{codeEditor.setValue(presets[$('preset').value]);apply()};
 try{codeEditor.setValue(localStorage.getItem('avs-code')||Object.values(presets)[0])}catch{codeEditor.setValue(Object.values(presets)[0])}
@@ -268,9 +283,9 @@ else new p5(p=>{
   observeFrameTime(p);setRenderQuality(p);update(p);
   const analysisTime=a.time,analysisDt=a.dt,speed=Number($('visual-speed')?.value)||1;
   visualTime+=analysisDt*speed;a.time=visualTime;a.dt=analysisDt*speed;
-  const frameStarted=performance.now(), frameState=state;
-  if(drawCode){try{if(directWebGL){a.directWebGL=true;try{drawCode(p,a,state);}finally{a.directWebGL=false;}}else window.visualTransition.render(p,a,()=>{p.push();try{drawCode(p,a,state)}finally{p.pop();}});}catch(e){$('error').textContent=e.stack||e.message;disposeCurrentState();const previous=window.visualTransition.recover();drawCode=previous?.fn||null;state=previous?.state||{};}}
-  if(drawCode&&state===frameState&&measuredState===frameState){
+  const frameStarted=performance.now(), frameState=state, blending=window.visualTransition.active;
+  if(drawCode){try{if(directWebGL&&!blending){a.directWebGL=true;try{drawCode(p,a,state);}finally{a.directWebGL=false;}}else window.visualTransition.render(p,a,()=>{p.push();try{drawCode(p,a,state)}finally{p.pop();}});}catch(e){$('error').textContent=e.stack||e.message;disposeCurrentState();const previous=window.visualTransition.recover();drawCode=previous?.fn||null;state=previous?.state||{};directWebGL=previous?.directWebGL||false;canBlend=previous?.canBlend??true;}}
+  if(drawCode&&!blending&&state===frameState&&measuredState===frameState){
    frameRenderSamples.push(performance.now()-frameStarted);
    if(frameRenderSamples.length>120)frameRenderSamples.shift();
    a.renderFrameMs=frameRenderSamples.reduce((sum,ms)=>sum+ms,0)/frameRenderSamples.length;
