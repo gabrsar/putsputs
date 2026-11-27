@@ -32,6 +32,7 @@
     {name:"Shader · Atlas Mandelbulb",path:"presets/shader-bulb-atlas.js",text:"Passeio 3D por um fractal que muda de luz e cor com a música."},
     {name:"Shader · Deriva estelar",path:"presets/shader-nebula-drift.js",text:"Voo por camadas de estrelas e nuvens coloridas que respiram com o áudio."},
     {name:"Shader · Ruínas em trânsito",path:"presets/shader-ruin-flight.js",text:"Voo sobre uma cidade alienígena com luzes acionadas pelo espectro."},
+    {name:"Shader · Laser na fumaça",path:"presets/shader-club-fog.js",text:"Três projetores RGB cruzam feixes na fumaça. Graves abrem os leques e os médios e agudos animam as estrelas."},
     {name:'Laser · estrelas de pista',path:'presets/club-lasers.js',text:'Estrelas e feixes giratórios respondem às bandas do áudio.'},
     {name:'Sismógrafo 3D · órbita',path:'presets/seismograph-orbit.js',text:'Traços contínuos de graves, médios e agudos com câmera em órbita.'},
     {name:'Caleidoscópio · seda',path:'presets/kaleido-silk.js',text:'Seda que transborda a tela, rotação lenta, espessuras variáveis e blur leve.'},
