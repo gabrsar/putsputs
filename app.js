@@ -165,7 +165,9 @@ function disposeCurrentState(){
 
 const frameRenderSamples = [];
 let measuredState;
-function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const direct=code.startsWith('// @putsputs-direct-webgl')&&new URLSearchParams(location.search).get('renderer')!=='canvas';const blendable=!direct||/^\/\/ @putsputs-direct-webgl\r?\n\/\/ @putsputs-blendable/.test(code);
+function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const renderer=new URLSearchParams(location.search).get('renderer');
+ const direct=renderer==='webgl'&&code.startsWith('// @putsputs-canvas-webgl')||renderer!=='canvas'&&code.startsWith('// @putsputs-direct-webgl');
+ const blendable=!direct||/^\/\/ @putsputs-(?:direct|canvas)-webgl\r?\n\/\/ @putsputs-blendable/.test(code);
  if(blendable&&canBlend&&sketch?.canvas&&drawCode&&window.visualTransition){
   // During the dissolve, the existing compositor draws both presets into its 2D layers.
   if(directWebGL)$('stage').querySelector('.direct-webgl-stage')?.remove();

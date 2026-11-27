@@ -1,4 +1,4 @@
-// @putsputs-direct-webgl
+// @putsputs-canvas-webgl
 // @putsputs-blendable
 // TERRENO MUSICAL / faces opacas, arestas e objetos low poly esparsos.
 /* global p, a, s */

@@ -109,7 +109,8 @@
   if(!key){window.prompt('Escolha um visual integrado para compartilhar.');return;}
   const url=new URL(location.pathname,location.origin);
   url.searchParams.set('preset',key);
-  if(key.startsWith('shader-')&&sharedParams.get('renderer')==='canvas')url.searchParams.set('renderer','canvas');
+  const renderer=sharedParams.get('renderer');
+  if(renderer==='canvas'&&key.startsWith('shader-')||renderer==='webgl'&&codeEditor.getValue().startsWith('// @putsputs-canvas-webgl'))url.searchParams.set('renderer',renderer);
   for(const id of settings)url.searchParams.set(id,$(id).value);
   try{await navigator.clipboard.writeText(url.href);$('share-visual').textContent='Link copiado';}
   catch{window.prompt('Copie o link do visual:',url.href);}

@@ -1,4 +1,4 @@
-// @putsputs-direct-webgl
+// @putsputs-canvas-webgl
 // @putsputs-blendable
 // FRACTAL / Mandelbrot, deriva suave e paleta espectral.
 /* global p, a, s */

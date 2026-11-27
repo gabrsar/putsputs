@@ -1,4 +1,4 @@
-// @putsputs-direct-webgl
+// @putsputs-canvas-webgl
 // @putsputs-blendable
 // LORENZ / integração RK4 com trajetória limitada.
 /* global p, a, s */

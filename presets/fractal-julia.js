@@ -1,4 +1,4 @@
-// @putsputs-direct-webgl
+// @putsputs-canvas-webgl
 // @putsputs-blendable
 // FRACTAL / Julia, variação do parâmetro complexo com o som.
 /* global p, a, s */
