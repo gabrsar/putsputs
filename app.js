@@ -232,10 +232,10 @@ g.clearRect(0,0,w,h);g.fillStyle='#a9ff64';for(let i=0;i<100;i++){const hz=20*Ma
 apply();
 if(typeof p5==='undefined')message('Não foi possível carregar p5.js. Confira sua conexão e recarregue.');
 else new p5(p=>{
- const stage=$('stage');let targetFps=60;
+ const stage=$('stage');let targetFps=1000;
  sketch=p;window.avsP5=p;
  p.setup=()=>{
-  p.pixelDensity(1);p.createCanvas(Math.max(1,stage.clientWidth),Math.max(1,stage.clientHeight));
+  p.frameRate(targetFps);p.pixelDensity(1);p.createCanvas(Math.max(1,stage.clientWidth),Math.max(1,stage.clientHeight));
   setRenderQuality(p);p.smooth();p.background(0);
   new ResizeObserver(()=>{
    const w=stage.clientWidth,h=stage.clientHeight;
@@ -249,7 +249,7 @@ else new p5(p=>{
   }).observe(stage);
  };
  p.draw=()=>{
-  const desiredFps=libraryDialog?.open?24:60;
+  const desiredFps=libraryDialog?.open?24:1000;
   if(desiredFps!==targetFps){targetFps=desiredFps;p.frameRate(targetFps);slowFrameTime=0;}
   if(window.avsPlayer?.visualPaused)return;
   observeFrameTime(p);setRenderQuality(p);update(p);

@@ -53,7 +53,7 @@ if (!s.surface) {
   const gl = canvas.getContext('webgl2');
   if (!gl) throw new Error('WebGL 2 indisponível.');
   const program = gl.createProgram();
-  const compile = (kind, code) => {
+  const compile = (kind, code, target = program) => {
     const shader = gl.createShader(kind);
     gl.shaderSource(shader, code);
     gl.compileShader(shader);
@@ -62,15 +62,16 @@ if (!s.surface) {
       gl.deleteShader(shader);
       throw new Error(error);
     }
-    gl.attachShader(program, shader);
+    gl.attachShader(target, shader);
     gl.deleteShader(shader);
   };
-  try {
-    compile(gl.VERTEX_SHADER, `#version 300 es
+  const vertex = `#version 300 es
 void main(){
   vec2 corner=vec2(float((gl_VertexID << 1) & 2),float(gl_VertexID & 2));
   gl_Position=vec4(corner*2.0-1.0,0.0,1.0);
-}`);
+}`;
+  try {
+    compile(gl.VERTEX_SHADER, vertex);
     compile(gl.FRAGMENT_SHADER, fragment);
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
@@ -85,17 +86,65 @@ void main(){
   const jitter = gl.getUniformLocation(program, 'iJitter');
   const stress = gl.getUniformLocation(program, 'iStress');
   const requestedSteps = Number(new URLSearchParams(location.search).get('stress'));
+  const heavyBlur = requestedSteps >= 256;
+  let blurProgram, blurTexture, blurRadius;
+  if (heavyBlur) {
+    blurProgram = gl.createProgram();
+    try {
+      compile(gl.VERTEX_SHADER, vertex, blurProgram);
+      compile(gl.FRAGMENT_SHADER, `#version 300 es
+precision highp float;
+uniform sampler2D source;
+uniform float radius;
+out vec4 outputColor;
+void main() {
+  vec2 inverseSize = 1. / vec2(textureSize(source, 0));
+  vec2 uv = gl_FragCoord.xy * inverseSize;
+  vec3 glow = vec3(0.);
+  float totalWeight = 0.;
+  for (int y = -4; y <= 4; y++) {
+    for (int x = -4; x <= 4; x++) {
+      vec2 offset = vec2(float(x), float(y));
+      float weight = exp(-dot(offset, offset) / 8.);
+      glow += texture(source, uv + offset * inverseSize * radius).rgb * weight;
+      totalWeight += weight;
+    }
+  }
+  vec3 center = texture(source, uv).rgb;
+  outputColor = vec4(center * .72 + glow * (.36 / totalWeight), 1.);
+}
+`, blurProgram);
+      gl.linkProgram(blurProgram);
+      if (!gl.getProgramParameter(blurProgram, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(blurProgram));
+    } catch (error) {
+      gl.deleteProgram(blurProgram);
+      gl.deleteProgram(program);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      throw error;
+    }
+    blurRadius = gl.getUniformLocation(blurProgram, 'radius');
+    blurTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, blurTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  }
   const steps = Number.isFinite(requestedSteps) ? Math.min(128, Math.max(0, Math.round(requestedSteps))) : 0;
   const burn = steps > 96;
   const maxDimension = Math.min(...gl.getParameter(gl.MAX_VIEWPORT_DIMS), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
-  s.surface = {canvas, gl, program, resolution, time, bands, stress, jitter, steps, burn, maxDimension};
+  s.surface = {canvas, gl, program, resolution, time, bands, stress, jitter, steps, burn, maxDimension, blurProgram, blurTexture, blurRadius};
   s.dispose = () => {
     canvas.remove();
+    if (blurProgram) {
+      gl.deleteProgram(blurProgram);
+      gl.deleteTexture(blurTexture);
+    }
     gl.deleteProgram(program);
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };
 }
-const {canvas, gl, program, resolution, time, bands, stress, jitter, steps, burn, maxDimension} = s.surface;
+const {canvas, gl, program, resolution, time, bands, stress, jitter, steps, burn, maxDimension, blurProgram, blurTexture, blurRadius} = s.surface;
 const burnScale = Math.min(4, Math.sqrt(8_294_400 / (p.width * p.height)), maxDimension / Math.max(p.width, p.height));
 const scale = burn ? burnScale : steps ? 1 : Math.min(.65, a.renderScale ?? .65);
 const width = Math.max(1, Math.round(p.width * scale));
@@ -122,6 +171,20 @@ if (burn) {
   gl.disable(gl.BLEND);
 } else {
   gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+if (blurProgram) {
+  gl.useProgram(blurProgram);
+  gl.bindTexture(gl.TEXTURE_2D, blurTexture);
+  if (s.surface.blurWidth !== width || s.surface.blurHeight !== height) {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    s.surface.blurWidth = width;
+    s.surface.blurHeight = height;
+  }
+  for (let pass = 0; pass < 8; pass++) {
+    gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
+    gl.uniform1f(blurRadius, 1 + pass * 1.5);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
 }
 if (a.directWebGL) {
   if (!canvas.isConnected) {
