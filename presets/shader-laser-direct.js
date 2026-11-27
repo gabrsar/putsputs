@@ -6,6 +6,7 @@ uniform vec3 iResolution;
 uniform float iTime;
 uniform vec3 iBands;
 uniform int iStress;
+uniform vec2 iJitter;
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 vec2 uv=(2.*fragCoord-iResolution.xy)/iResolution.y;
 vec3 light=vec3(.008,.014,.03);
@@ -31,7 +32,7 @@ for(int j=0;j<3;j++){
 if(iStress>0){
  float haze=0.;
  vec3 direction=normalize(vec3(uv,1.4));
- for(int step=0;step<96;step++){
+ for(int step=0;step<128;step++){
   if(step>=iStress) break;
   float distance=.12+float(step)*.055;
   vec3 point=direction*distance;
@@ -45,7 +46,7 @@ if(iStress>0){
 fragColor=vec4(light,1.);
 }
 out vec4 outputColor;
-void main(){mainImage(outputColor,gl_FragCoord.xy);}
+void main(){mainImage(outputColor,gl_FragCoord.xy+iJitter);}
 `;
 if (!s.surface) {
   const canvas = document.createElement('canvas');
@@ -81,18 +82,22 @@ void main(){
   const resolution = gl.getUniformLocation(program, 'iResolution');
   const time = gl.getUniformLocation(program, 'iTime');
   const bands = gl.getUniformLocation(program, 'iBands');
+  const jitter = gl.getUniformLocation(program, 'iJitter');
   const stress = gl.getUniformLocation(program, 'iStress');
   const requestedSteps = Number(new URLSearchParams(location.search).get('stress'));
-  const steps = Number.isFinite(requestedSteps) ? Math.min(96, Math.max(0, Math.round(requestedSteps))) : 0;
-  s.surface = {canvas, gl, program, resolution, time, bands, stress, steps};
+  const steps = Number.isFinite(requestedSteps) ? Math.min(128, Math.max(0, Math.round(requestedSteps))) : 0;
+  const burn = steps > 96;
+  const maxDimension = Math.min(...gl.getParameter(gl.MAX_VIEWPORT_DIMS), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+  s.surface = {canvas, gl, program, resolution, time, bands, stress, jitter, steps, burn, maxDimension};
   s.dispose = () => {
     canvas.remove();
     gl.deleteProgram(program);
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };
 }
-const {canvas, gl, program, resolution, time, bands, stress, steps} = s.surface;
-const scale = steps ? 1 : Math.min(.65, a.renderScale ?? .65);
+const {canvas, gl, program, resolution, time, bands, stress, jitter, steps, burn, maxDimension} = s.surface;
+const burnScale = Math.min(4, Math.sqrt(8_294_400 / (p.width * p.height)), maxDimension / Math.max(p.width, p.height));
+const scale = burn ? burnScale : steps ? 1 : Math.min(.65, a.renderScale ?? .65);
 const width = Math.max(1, Math.round(p.width * scale));
 const height = Math.max(1, Math.round(p.height * scale));
 if (canvas.width !== width) canvas.width = width;
@@ -103,7 +108,21 @@ gl.uniform3f(resolution, width, height, 1);
 gl.uniform1f(time, a.time || 0);
 gl.uniform3f(bands, a.bass || 0, a.mid || 0, a.treble || 0);
 gl.uniform1i(stress, steps);
-gl.drawArrays(gl.TRIANGLES, 0, 3);
+if (burn) {
+  // Render 16 subpixel samples into the same buffer so every pass contributes.
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND);
+  gl.blendColor(0, 0, 0, 1 / 16);
+  gl.blendFuncSeparate(gl.CONSTANT_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
+  for (let sample = 0; sample < 16; sample++) {
+    gl.uniform2f(jitter, (sample % 4 + .5) / 4 - .5, (Math.floor(sample / 4) + .5) / 4 - .5);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  gl.disable(gl.BLEND);
+} else {
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
 if (a.directWebGL) {
   if (!canvas.isConnected) {
     canvas.className = 'direct-webgl-stage';
