@@ -91,8 +91,33 @@
  let fps=60;setInterval(()=>{fps+=(Math.max(0,a.fps||0)-fps)*.25;$('fps-pill').textContent=Math.round(fps)+' FPS';$('visual-error').hidden=!$('error').textContent.trim();},400);
  let initial='discover';try{initial=localStorage.getItem('avs-palco-mode')||'discover';}catch{}
  setMode(initial);renderLibrary();updateSelected();
- let remembered='file:presets/moire-fluid.js';try{const saved=localStorage.getItem('avs-last-preset');if(saved&&window.presetLibrary.entries().some(e=>e.value===saved))remembered=saved;}catch{}
- window.presetLibrary.load(remembered);if(initial!=='studio')$('shuffle-presets').click();sequence();
+ const sharedParams=new URLSearchParams(location.search);
+ const bundled=new Map(window.presetLibrary.entries().filter(entry=>entry.value.startsWith('file:')).map(entry=>[entry.value.replace(/^file:presets\//,'').replace(/\.js$/,''),entry.value]));
+ const sharedPreset=bundled.get(sharedParams.get('preset'));
+ const settings=['visual-speed','visual-brightness','render-quality','preset-seed'];
+ if(sharedPreset){
+  for(const id of settings){
+   const value=sharedParams.get(id);
+   if(value!==null&&value.length<=80){const field=$(id);const previous=field.value;field.value=value;if(!field.value)field.value=previous;}
+  }
+  $('visual-speed').oninput();
+  $('visual-brightness').oninput();
+ }
+ $('share-visual').onclick=async()=>{
+  const key=[...bundled].find(([,value])=>value===$('preset').value)?.[0];
+  if(!key){window.prompt('Escolha um visual integrado para compartilhar.');return;}
+  const url=new URL(location.pathname,location.origin);
+  url.searchParams.set('preset',key);
+  for(const id of settings)url.searchParams.set(id,$(id).value);
+  try{await navigator.clipboard.writeText(url.href);$('share-visual').textContent='Link copiado';}
+  catch{window.prompt('Copie o link do visual:',url.href);}
+ };
+ $('library-dialog').addEventListener('close',()=>{$('share-visual').textContent='Compartilhar';});
+ let remembered='file:presets/moire-fluid.js';
+ try{const saved=localStorage.getItem('avs-last-preset');if(saved&&window.presetLibrary.entries().some(e=>e.value===saved))remembered=saved;}catch{}
+ window.presetLibrary.load(sharedPreset||remembered);
+ if(!sharedPreset&&initial!=='studio')$('shuffle-presets').click();
+ sequence();
 // Cut a clear window in the veil; the real canvas fills the viewport behind the UI.
  let maskFrame;function placeWindow(){cancelAnimationFrame(maskFrame);maskFrame=requestAnimationFrame(()=>{const rect=document.querySelector('.stage-shell').getBoundingClientRect(),style=document.documentElement.style;for(const [key,value]of Object.entries({left:rect.left,top:rect.top,width:rect.width,height:rect.height}))style.setProperty('--window-'+key,value+'px');});}
  const windowObserver=new ResizeObserver(placeWindow);for(const el of [document.querySelector('.stage-shell'),document.querySelector('.app-header'),document.querySelector('.music-player')])windowObserver.observe(el);
