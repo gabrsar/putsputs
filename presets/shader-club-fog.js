@@ -8,9 +8,9 @@ uniform float iTime;
 uniform vec3 iBands;
 float mist(vec2 p){
  float t=iTime*.22;
- return .52+.20*sin(p.x*8.+sin(p.y*6.-t)+t)
-           +.15*sin(dot(p,vec2(-13.,10.))-t*1.7)
-           +.08*sin(dot(p,vec2(22.,16.))+t*.9);
+ float curl=sin(p.y*4.-t+sin(p.x*3.+t*.6));
+ return .49+.19*sin(p.x*7.+curl+t)+.16*sin(dot(p,vec2(-11.,9.))-t*1.4)
+           +.10*sin(dot(p,vec2(21.,17.))+curl*2.+t*.9);
 }
 vec3 fan(vec2 p,vec2 source,float angle,float spread,vec3 tint){
  vec2 q=p-source;
@@ -19,14 +19,14 @@ vec3 fan(vec2 p,vec2 source,float angle,float spread,vec3 tint){
  float ray=side/max(.035,along)/spread*5.;
  float index=round(ray);
  float distance=abs(side-index*spread*along/5.);
- float pixel=2./iResolution.y;
+ float pixel=1.65/iResolution.y;
  float width=.0015+max(0.,along)*.003+iBands.z*.002;
- float core=1.-smoothstep(width,width+pixel,distance);
+ float core=1.-smoothstep(width*.65,width+pixel,distance);
  float halo=exp(-distance/(.012+max(along,0.)*.021));
  float vignette=smoothstep(0.,.08,along)*(1.-smoothstep(4.9,5.5,abs(ray)));
- float fog=mist(p)*exp(-max(0.,along)*.26);
+ float fog=mist(p)*exp(-max(0.,along)*.23);
  float sourceGlow=exp(-length(q)*58.);
- return tint*((core*.77+halo*.28)*vignette*fog+sourceGlow*.85);
+ return tint*((core*.92+halo*.32)*vignette*fog+sourceGlow*1.25);
 }
 float starOutline(vec2 q,float angle,float size){
  // Fold into a single sector and measure the edge between its outer and inner vertices.
@@ -41,18 +41,29 @@ float starOutline(vec2 q,float angle,float size){
 void mainImage(out vec4 color,in vec2 pixel){
  vec2 p=(2.*pixel-iResolution.xy)/iResolution.y;
  float aspect=iResolution.x/iResolution.y;
- vec3 light=vec3(.013,.014,.034)*(.65+mist(p));
- float spread=.34+iBands.x*.35;
+ float horizon=-.39;
+ float floorMask=1.-smoothstep(horizon-.045,horizon+.045,p.y);
+ float reflected=floorMask*exp((p.y-horizon)*5.);
+ vec3 light=vec3(.008,.010,.025)*(1.+mist(p));
+ light+=vec3(.014,.016,.043)*reflected;
+ float spread=.27+iBands.x*.29;
  float aim=.11*iBands.x;
- light+=fan(p,vec2(-aspect*.76,-.64),.62+.24*sin(iTime*.81)+aim,spread,vec3(.06,1.,.59));
- light+=fan(p,vec2(aspect*.76,-.64),2.52+.26*cos(iTime*.73)-aim,spread,vec3(.32,.32,1.));
- light+=fan(p,vec2(0.,.83),-1.57+.43*sin(iTime*.62),spread*.78,vec3(1.,.10,.41))*.77;
+ vec2 left=vec2(-aspect*.78,horizon),right=vec2(aspect*.78,horizon);
+ float leftAngle=.59+.22*sin(iTime*.76)+aim;
+ float rightAngle=2.56+.22*cos(iTime*.68)-aim;
+ vec3 emerald=vec3(.03,1.,.55),violet=vec3(.42,.28,1.);
+ light+=fan(p,left,leftAngle,spread,emerald);
+ light+=fan(p,right,rightAngle,spread*1.10,violet);
+ light+=fan(p,vec2(0.,.83),-1.57+.27*sin(iTime*.55),spread*.69,vec3(1.,.12,.32))*.63;
+ vec2 mirror=vec2(p.x,2.*horizon-p.y);
+ light+=.24*reflected*(fan(mirror,left,leftAngle,spread,emerald)+fan(mirror,right,rightAngle,spread*1.10,violet));
  for(int j=0;j<5;j++){
   float k=float(j);
-  vec2 center=vec2((k-2.)*min(.39,aspect*.34),.30+.19*sin(iTime*.81+k*2.));
-  float spin=iTime*(.47+.1*k)+k;
-  vec3 tint=.55+.45*cos(vec3(0.,2.1,4.2)+k*1.8+iTime*.23);
-  light+=tint*starOutline(p-center,spin,.072+iBands.y*.051)*( .68+iBands.z*.35);
+  vec2 center=vec2((k-2.)*min(.39,aspect*.32)+.09*sin(iTime*.45+k),.32+.21*sin(iTime*.54+k*1.4));
+  float spin=iTime*(.36+.063*k)+k;
+  float gate=.30+.70*pow(.5+.5*cos(iTime*.82+k*.77),2.);
+  vec3 tint=.55+.45*cos(vec3(.3,2.3,4.1)+k*1.54+iTime*.14);
+  light+=tint*starOutline(p-center,spin,.065+iBands.y*.035)*gate*(.78+iBands.z*.32);
  }
  color=vec4(1.-exp(-light*1.24),1.);
 }

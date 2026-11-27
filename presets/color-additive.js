@@ -50,4 +50,21 @@ for(let side=0;side<2;side++){
  const c=g.drawingContext,rad=Math.hypot(w,h)*(.40+v*.25),gradient=c.createRadialGradient(x,y,0,x,y,rad);
  gradient.addColorStop(0,side?'rgba(72,132,255,'+(flash*.8)+')':'rgba(255,40,65,'+(flash*.8)+')');gradient.addColorStop(.18,side?'rgba(25,65,245,'+(flash*.40)+')':'rgba(220,12,30,'+(flash*.40)+')');gradient.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=gradient;c.fillRect(0,0,w,h);
  for(let k=0;k<5;k++){g.fill(side?50:255,side?115:35,side?255:65,flash*(12+v*22));g.ellipse(x+Math.sin(k*9)*w*.12,y+Math.cos(k*7)*h*.20,w*(.18+k*.09),h*.08);}
-}present(g,.30+weather*.35,12);
+}
+const c=g.drawingContext;
+for(let pair=0;pair<3;pair++){
+ const gate=Math.pow(Math.max(0,Math.sin(t*(.13+pair*.043)+pair*2.7)),3)*(.15+mid*.34);
+ if(gate<.015)continue;
+ const spacing=.19+.14*Math.sin(t*.38+pair*2);
+ for(let side=0;side<2;side++){
+  const x=w*(.5+(side?1:-1)*spacing)+w*.1*Math.sin(t*.28+pair);
+  const y=h*(.28+pair*.22+.09*Math.cos(t*.31+side));
+  const radius=Math.min(w,h)*(.24+pair*.06);
+  const glow=c.createRadialGradient(x,y,0,x,y,radius);
+  const color=side?'66,120,255':'255,42,78';
+  glow.addColorStop(0,'rgba('+color+','+gate+')');
+  glow.addColorStop(1,'rgba('+color+',0)');
+  c.fillStyle=glow;c.fillRect(x-radius,y-radius,2*radius,2*radius);
+ }
+}
+present(g,.30+weather*.35,12);

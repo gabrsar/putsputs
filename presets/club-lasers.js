@@ -1,18 +1,42 @@
-// Club laser dots and rotating diffraction stars, with no rapid full-screen flashes.
-const t=a.time||0, span=Math.min(p.width,p.height), bass=a.bass||0, high=a.treble||0;
-p.background(4,3,13,55);p.blendMode(p.ADD);
+const t=a.time||0,w=p.width,h=p.height,span=Math.min(w,h),dt=Math.min(.06,a.dt??1/60);
+s.motion??=[0,0];
+const ease=1-Math.exp(-dt/.25);
+s.motion[0]+=((a.bass||0)-s.motion[0])*ease;
+s.motion[1]+=((a.treble||0)-s.motion[1])*ease;
+if(!s.glow){
+ s.glow=p.createGraphics(w,h);s.glow.pixelDensity(1);s.dispose=()=>s.glow.remove();
+}
+const g=s.glow;
+if(g.width!==w||g.height!==h)g.resizeCanvas(w,h);
+g.clear();g.blendMode(p.ADD);
+p.background(5,5,14);
+const palette=[[85,238,180],[105,144,255],[248,101,192]];
 for(let head=0;head<3;head++){
- const x=p.width*(.24+head*.26),y=p.height*(.46+Math.sin(t*.42+head)*.14);
- const color=[[70,255,136],[90,130,255],[250,74,200]][head];
- for(let j=0;j<18;j++){
-  const angle=t*(head%2?-.68:.72)+j*Math.PI/9;
-  const radius=span*(.10+.21*(.5+.5*Math.sin(j*3.2+head)))*(1+bass*.5);
-  const px=x+Math.cos(angle)*radius,py=y+Math.sin(angle)*radius*.65;
-  p.stroke(...color,15+high*35);p.strokeWeight(1);p.line(x,y,px,py);
-  p.noStroke();p.fill(...color,25);p.circle(px,py,12+high*10);
-  p.stroke(...color,185);p.strokeWeight(1.3);
-  const r=2+high*5;
-  for(let k=0;k<3;k++){const spin=angle+t*.7+k*Math.PI/3,dx=Math.cos(spin)*r,dy=Math.sin(spin)*r;p.line(px-dx,py-dy,px+dx,py+dy);}
+ const ink=palette[head],cx=w*(.27+.23*head),cy=h*(.47+.10*Math.sin(t*.28+head));
+ const tilt=.56+.12*Math.cos(t*.31+head),turn=t*(head===1?-.42:.38)+head*.9;
+ const scale=span*(.19+s.motion[0]*.065);
+ const sourceX=w*(.33+.17*head),sourceY=h*.92;
+ for(let ring=0;ring<3;ring++){
+  for(let i=0;i<9;i++){
+   const theta=i*Math.PI*2/9+turn+ring*.22;
+   const radius=scale*(.42+ring*.31);
+   const x=cx+Math.cos(theta)*radius,y=cy+Math.sin(theta)*radius*tilt;
+   const brightness=.52+.48*Math.pow(.5+.5*Math.sin(theta*2.+t*.56+ring),2);
+   g.stroke(...ink,ring===2?17:10);g.strokeWeight(1);g.line(sourceX,sourceY,x,y);
+   g.noStroke();g.fill(...ink,42*brightness);g.circle(x,y,6+ring+s.motion[1]*4);
+   const size=1.5+ring*.58+s.motion[1]*2.;
+   g.stroke(...ink,175*brightness);g.strokeWeight(.85);
+   for(let ray=0;ray<3;ray++){
+    const angle=turn*.65+ray*Math.PI/3+i*.13,dx=Math.cos(angle)*size,dy=Math.sin(angle)*size;
+    g.line(x-dx,y-dy,x+dx,y+dy);
+   }
+   g.noStroke();g.fill(218,238,255,140*brightness);g.circle(x,y,1.35);
+  }
  }
 }
-p.blendMode(p.BLEND);
+const ctx=p.drawingContext;ctx.save();
+try{
+ ctx.globalCompositeOperation='lighter';
+ ctx.filter='blur(6px)';ctx.globalAlpha=.75;ctx.drawImage(g.canvas,0,0,w,h);
+ ctx.filter='none';ctx.globalAlpha=1;ctx.drawImage(g.canvas,0,0,w,h);
+}finally{ctx.restore();}

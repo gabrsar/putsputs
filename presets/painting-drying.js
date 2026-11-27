@@ -29,8 +29,8 @@ p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
 
 if(!s.drops||a.keyboard?.pressed('KeyN')){s.drops=[];s.spray=0;s.drip=0;s.palette=rand(0,60);}
-const paper=layer('paper');if(!s.paperReady){paper.background(238,232,217);paper.noStroke();for(let i=0;i<2500;i++){paper.fill(75,65,40,rand(4,15));paper.circle(rand(0,w),rand(0,h),rand(.3,1.2));}s.paperReady=true;}
-p.background(238,232,217);p.image(paper,0,0,w,h);p.colorMode(p.HSB,360,100,100,255);p.noStroke();
+const paper=layer('paper');if(!s.paperReady){paper.background(6,7,10);paper.noStroke();for(let i=0;i<2500;i++){paper.fill(125,137,151,rand(4,15));paper.circle(rand(0,w),rand(0,h),rand(.3,1.2));}s.paperReady=true;}
+p.background(6,7,10);p.image(paper,0,0,w,h);p.colorMode(p.HSB,360,100,100,255);p.noStroke();
 let peak=0,squares=0,count=0;for(let i=0;i<(a.waveform?.length||0);i+=8){const v=a.waveform[i];peak=Math.max(peak,Math.abs(v));squares+=v*v;count++;}
 const amp=clamp(Math.sqrt(squares/Math.max(1,count))*2+peak*.35),voice=region(280,3500);
 const cx=.14+p.noise(14,t*.16)*.72,cy=.12+p.noise(57,t*.17)*.72;

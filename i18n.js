@@ -339,7 +339,8 @@ Caleidoscópio · mandala líquida|Kaleidoscope · liquid mandala|万花筒 · �
 Sofá · trama pulsante|Couch · pulsing weave|沙发 · 脉动织纹|सोफ़ा · धड़कती बुनावट|Sofá · trama pulsante|الأريكة · نسيج نابض
 Sofá · ondas de veludo|Couch · velvet waves|沙发 · 丝绒波浪|सोफ़ा · मखमली लहरें|Sofá · ondas de terciopelo|الأريكة · أمواج مخملية
 Perlin · correntes musicais|Perlin · musical currents|Perlin · 音乐流|Perlin · संगीत की धाराएँ|Perlin · corrientes musicales|Perlin · تيارات موسيقية
-Nuvens · bichos de algodão|Clouds · cotton creatures|云海 · 棉絮生灵|बादल · रुई के जीव|Nubes · criaturas de algodón|السحب · كائنات قطنية
+Shader · Jardim fractal|Shader · fractal garden|着色器 · 分形花园|शेडर · फ्रैक्टल उद्यान|Shader · jardín fractal|مظلّل · حديقة كسورية
+Nuvens · camadas de vento|Clouds · layers of wind|云海 · 分层风场|बादल · हवा की परतें|Nubes · capas de viento|السحب · طبقات الرياح
 Violão · madeira e ressonância|Guitar · wood and resonance|吉他 · 木质与共鸣|गिटार · लकड़ी और अनुनाद|Guitarra · madera y resonancia|الغيتار · خشب ورنين
 Handdrawing · sismógrafo à mão|Handdrawing · hand-drawn seismograph|手绘 · 手绘地震仪|हैंडड्रॉइंग · हाथ से बना भूकंपमापी|Dibujo a mano · sismógrafo a mano|رسم يدوي · راسم اهتزازات
 Infinity · desenho por frequência|Infinity · drawing by frequency|Infinity · 频率绘图|Infinity · आवृत्ति से चित्र|Infinity · dibujo por frecuencia|Infinity · الرسم بالتردد

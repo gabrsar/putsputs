@@ -26,7 +26,7 @@ p.background(colors[0]);p.noStroke();
 // Continuous woven chevrons. Each colored band shares the same warped coordinates.
 const weaveY=(x,row)=>{
  const u=x/unit,triangle=2/Math.PI*Math.asin(Math.sin(u*Math.PI));
- const fold=Math.sin(u*.8+row*.45+t*.11)*low*unit*.065;
+ const fold=Math.sin(u*1.7+row*.48-t*.47)*unit*(.025+low*.012);
  return row*stripe+triangle*unit*.33+fold;
 };
 for(let row=-9;row<h/stripe+10;row++){
@@ -34,7 +34,7 @@ for(let row=-9;row<h/stripe+10;row++){
  for(let x=-unit;x<=w+unit;x+=6)p.vertex(x,weaveY(x,row));
  for(let x=w+unit;x>=-unit;x-=6)p.vertex(x,weaveY(x,row+1));p.endShape(p.CLOSE);
  // A pair of yarn edges gives the bands a tangible warp/weft construction.
- p.noFill();p.stroke(240,217,171,38);p.strokeWeight(.8);p.beginShape();for(let x=0;x<=w;x+=6)p.vertex(x,weaveY(x,row)+1);p.endShape();p.noStroke();
+ p.noFill();p.stroke(240,217,171,27+19*Math.pow(.5+.5*Math.sin(row*.51-t*.65),3)+mid*10);p.strokeWeight(.8);p.beginShape();for(let x=0;x<=w;x+=6)p.vertex(x,weaveY(x,row)+1);p.endShape();p.noStroke();
 }
 // Twill threads: alternating short diagonals, rather than a flat overlaid grid.
 p.strokeWeight(.65);

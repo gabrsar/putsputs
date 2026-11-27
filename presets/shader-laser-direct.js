@@ -6,19 +6,31 @@ precision highp float;
 uniform vec3 iResolution;
 uniform float iTime;
 uniform vec3 iBands;
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-vec2 uv=(2.*fragCoord-iResolution.xy)/iResolution.y;
-vec3 light=vec3(.008,.014,.03);
-for(int j=0;j<3;j++){
- float k=float(j);
- vec2 p=uv-vec2((k-1.)*.63,sin(iTime*.7+k*2.)*.24);
- float r=length(p),a=atan(p.y,p.x)+iTime*(.8-k*.55);
- float dots=pow(.5+.5*cos(a*14.),28.)*pow(.5+.5*cos(r*30.-iTime*3.),20.);
- float ray=pow(.5+.5*cos(a*14.),130.)*exp(-r*4.);
- vec3 hue=.52+.48*cos(vec3(0.,2.,4.)+k*2.);
- light+=hue*(dots*(.65+iBands.z)+ray*(.11+iBands.x*.4));
-}
-fragColor=vec4(light,1.);
+vec3 spectrum(float phase){return .54+.46*cos(vec3(0.,2.12,4.28)+phase);}
+void mainImage(out vec4 color,in vec2 pixel){
+ vec2 p=(2.*pixel-iResolution.xy)/iResolution.y;
+ vec3 c=vec3(.008,.01,.023);
+ float aa=2./iResolution.y;
+ for(int head=0;head<3;head++){
+  float k=float(head);
+  vec2 center=vec2((k-1.)*.65,.13*sin(iTime*.47+k*2.));
+  vec2 q=p-center;
+  float r=length(q),a=atan(q.y,q.x)-iTime*(.20+k*.13);
+  for(int order=0;order<3;order++){
+   float j=float(order);
+   float warped=a+.09*sin(r*7.-iTime*.82+j*2.+k);
+   float spokes=abs(sin(warped*(11.+j*5.)+j*1.4));
+   float rings=abs(sin(r*(34.+j*9.)+sin(warped*5.)*.8-iTime*(.7+j*.2)));
+   float dotDistance=length(vec2(spokes*r/(11.+j*5.),rings/(34.+j*9.)));
+   float core=1.-smoothstep(.0014,.0034+aa,dotDistance);
+   float glow=exp(-dotDistance*115.);
+   float gate=smoothstep(.035,.14,r)*exp(-r*(.64+j*.48));
+   c+=spectrum(k*2.1+j*.94+iTime*.18)*(core*.78+glow*.11)*gate*(.68+iBands.z*.52);
+  }
+  float ray=exp(-abs(sin(a*7.+k))*15.)*exp(-r*3.1);
+  c+=spectrum(k*2.1)*ray*(.075+iBands.x*.13);
+ }
+ color=vec4(1.-exp(-c*1.23),1.);
 }
 out vec4 outputColor;
 void main(){mainImage(outputColor,gl_FragCoord.xy);}
@@ -95,12 +107,5 @@ if (query) {
   gl.endQuery(timer.TIME_ELAPSED_EXT);
   queries.push(query);
 }
-if (a.directWebGL) {
-  if (!canvas.isConnected) {
-    canvas.className = 'direct-webgl-stage';
-    canvas.setAttribute('aria-hidden', 'true');
-    document.getElementById('stage').append(canvas);
-  }
-} else {
-  p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);
-}
+if (a.directWebGL && a.presentWebGL) a.presentWebGL(canvas);
+else p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);

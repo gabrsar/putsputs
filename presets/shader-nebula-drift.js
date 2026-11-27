@@ -7,24 +7,44 @@ uniform vec3 iResolution;
 uniform float iTime;
 uniform vec3 iBands;
 float noise21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-void mainImage(out vec4 color,in vec2 pixel){
- vec2 p=(2.*pixel-iResolution.xy)/iResolution.y;
- float theta=atan(p.y,p.x), radius=length(p);
- vec3 light=vec3(.009,.008,.025);
- for(int j=0;j<14;j++){
-  float layer=float(j);
-  float depth=fract(layer/14.+iTime*.08);
-  float angle=theta+depth*2.7+sin(radius*4.-iTime*.3+depth*5.)*.36;
-  vec2 q=vec2(cos(angle),sin(angle))*radius*(3.+depth*27.)+vec2(layer*11.13,layer*23.21);
-  vec2 id=floor(q), cell=fract(q)-.5;
-  float seed=noise21(id), fade=sin(depth*3.14159);
-  vec2 offset=vec2(noise21(id+1.),noise21(id+2.))*.52-.26;
-  float core=exp(-dot(cell-offset,cell-offset)*(52.+depth*180.));
-  float cloud=.5+.5*cos(5.*angle+radius*6.+depth*11.+iTime*.25);
-  vec3 tint=.57+.43*cos(vec3(.1,2.5,4.8)+layer*.47+iBands.y*.9);
-  light+=fade*tint*(core*step(.85,seed)*(.55+iBands.z)+pow(cloud,5.)*.043*(1.+iBands.x));
+float field(vec3 p){
+ vec3 q=abs(fract(p*.63+.5)-.5)*2.1;
+ float structure=0.;
+ for(int k=0;k<7;k++){
+  float r2=max(.19,dot(q,q));
+  float before=length(q);
+  q=abs(q)/r2-vec3(.66,.52,.71);
+  structure+=abs(length(q)-before);
  }
- color=vec4(1.-exp(-light),1.);
+ return pow(clamp(structure*.18,0.,1.),3.);
+}
+float starHash(vec2 p){
+ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);
+}
+void mainImage(out vec4 color,in vec2 pixel){
+ vec2 uv=(2.*pixel-iResolution.xy)/iResolution.y;
+ vec3 direction=normalize(vec3(uv*.83,1.));
+ float turn=iTime*.042;
+ direction.xz=mat2(cos(turn),sin(turn),-sin(turn),cos(turn))*direction.xz;
+ vec3 origin=vec3(.19*sin(turn),.18*cos(turn*.7),iTime*.15);
+ vec3 light=vec3(.008,.011,.032);
+ for(int i=0;i<13;i++){
+  float depth=.42+float(i)*.36;
+  vec3 p=origin+direction*depth;
+  float dust=field(p);
+  float filament=pow(dust,2.6);
+  float cloudBand=.5+.5*cos(p.y*3.2+p.x*.74+sin(p.z*.62)*1.8);
+  float curtain=smoothstep(.12,.82,cloudBand);
+  vec3 tint=.52+.48*cos(vec3(.4,2.,4.5)+depth*.77+sin(p.y*1.8)*1.1+iBands.y*.6);
+  vec2 starGrid=p.xy*(7.+float(i)*.38)+vec2(float(i)*17.9,float(i)*11.3);
+  vec2 id=floor(starGrid);
+  vec2 nucleus=vec2(starHash(id+1.),starHash(id+2.))*.68+.16;
+  vec2 offset=fract(starGrid)-nucleus;
+  float star=exp(-dot(offset,offset)*235.)*step(.973,starHash(id));
+  light+=(tint*(dust*.072+filament*.26)*curtain+mix(tint,vec3(.83,.9,1.),.75)*star*.90)
+        *(1.+iBands.z*.39)*exp(-depth*.23);
+ }
+ color=vec4(1.-exp(-light*1.18),1.);
 }
 out vec4 outputColor;
 void main(){mainImage(outputColor,gl_FragCoord.xy);}

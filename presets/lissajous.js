@@ -27,11 +27,28 @@ const present=(g,ttl=.7,bloom=4)=>{
 };
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
-const g=fresh(),n=a.waveform?.length||0,R=Math.min(w,h)*.43;
-const peak=(a.waveform||[]).reduce((v,x)=>Math.max(v,Math.abs(x)),0);s.gain??=1;s.gain+=(Math.min(6,.85/Math.max(.04,peak))-s.gain)*(1-Math.exp(-dt/.25));
-g.translate(w/2,h/2);g.rotate(Math.sin(t*.09)*.14);g.noFill();g.colorMode(p.HSB,360,100,100,255);
-for(let pass=0;pass<3;pass++){
- const lag=Math.floor(n*(.013+pass*.029+low*.008)),hue=(170+pass*72+t*2+trend*30)%360;
- g.stroke(hue,65,100,55+loud*130);g.strokeWeight(pass?1:1.7);g.beginShape();
- for(let i=0;i<n;i+=Math.max(1,Math.floor(n/640))){const x=wave(i/n)*R*s.gain,y=wave(((i+lag)%Math.max(1,n))/Math.max(1,n))*R*s.gain;g.vertex(x+Math.sin(t*.4)*R*mid*.06,y);}g.endShape();
-}present(g,.8+weather*1.4,5);
+const g=fresh(),R=Math.min(w,h)*.40;
+const waveform=a.waveform||[],count=144;
+s.scope??=new Float32Array(count);
+s.phase=(s.phase??0)+dt*(.24+low*.12);
+const smooth=1-Math.exp(-dt/.34);
+for(let j=0;j<count;j++){
+ let mean=0;
+ const at=Math.floor(j/count*waveform.length);
+ for(let k=-7;k<=7;k++)mean+=waveform[(at+k+waveform.length)%waveform.length]||0;
+ s.scope[j]+=(mean/15-s.scope[j])*smooth;
+}
+s.pressure??=0;s.pressure+=(loud-s.pressure)*smooth;
+g.translate(w*.5,h*.5);g.noFill();g.colorMode(p.HSB,360,100,100,255);
+for(let pass=0;pass<2;pass++){
+ g.stroke(176+pass*112,65,100,68+s.pressure*80);g.strokeWeight(pass?1.15:1.8);g.beginShape();
+ for(let j=0;j<=count;j++){
+  const theta=j/count*TAU;
+  const detail=s.scope[j%count]*.28;
+  const x=Math.sin(theta*(pass?3:2)+s.phase)+detail;
+  const y=Math.sin(theta*(pass?2:3)-s.phase*.71)+detail*.7;
+  g.vertex(x*R*(.85+pass*.12),y*R*.78);
+ }
+ g.endShape(p.CLOSE);
+}
+present(g,1.15,4);

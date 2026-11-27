@@ -19,15 +19,15 @@ const hint=text=>{p.push();p.resetMatrix();p.colorMode(p.RGB,255);p.noStroke();p
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);p.rectMode(p.CORNER);p.ellipseMode(p.CENTER);
 
 p.background(5,15,25,255*(1-Math.exp(-dt/.18)));s.style??=0;if(keys.pressed('KeyW'))s.style=1-s.style;if(mouse.clicked)s.source={x:(mouse.nx-.5)*2,y:(mouse.ny-.5)*2};
-const source=s.source||{x:.4,y:.08},R=Math.max(w,h)*1.65,cols=90,rows=64,rotation=t*.025+trend*.12;
+const source=s.source||{x:.4,y:.08},cols=90,rows=64;
 p.colorMode(p.HSB,360,100,100,255);p.noFill();p.strokeWeight(.7);
 for(let row=0;row<rows;row++){
  const Y=(row/(rows-1)-.5)*1.35;p.beginShape();
  for(let col=0;col<cols;col++){
   const X=(col/(cols-1)-.5)*1.75,d1=Math.hypot(X+.4,Y),d2=Math.hypot(X-source.x,Y-source.y),phase=t*(1.3+mid*.6);
   const z=(Math.sin(d1*(13+low*4)-phase)+Math.sin(d2*15-phase*.93))*(.018+energy*.045)+wave(col/(cols-1))*.025;
-  const xx=X*Math.cos(rotation)-Y*Math.sin(rotation)*.15,yy=Y*.55+z;
-  const x=w/2+xx*R,y=h/2+yy*R,color=clamp((z+.12)/.24);
+  const xx=X,yy=Y*.55+z;
+  const x=w/2+xx*w*.52,y=h/2+yy*h*.91,color=clamp((z+.12)/.24);
   if(s.style){p.stroke(175+color*65+high*20,55,45+color*48,130);p.strokeWeight(.8+color*1.1+energy);p.point(x,y);}else{p.stroke(175+row*.9+trend*30,50,55+energy*30,65+energy*80);p.vertex(x,y);}
  }
  p.endShape();

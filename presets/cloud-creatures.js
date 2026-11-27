@@ -1,48 +1,106 @@
-// Nuvens · bichos de algodão — Pareidolia de gato, coelho, baleia e bule; clique ou N troca a forma; mouse sopra as nuvens.
-/* global p, a, s */
-// Standalone AVS-Lab draw body: p = p5, a = audio/inputs, s = persistent state.
-const dt=Math.max(0,Math.min(a.dt??1/60,.05)),w=p.width,h=p.height,TAU=Math.PI*2;
-const clamp=(v,lo=0,hi=1)=>Math.max(lo,Math.min(hi,v));
-const rand=(lo=0,hi=1)=>a.rand?a.rand(lo,hi):lo+Math.random()*(hi-lo);
-const groups=Object.values(a.groups||{}).filter(g=>g.enabled).sort((x,y)=>x.low-y.low);
-const level=g=>clamp(a.visualLevel?a.visualLevel(g.db??-120):((g.db??-120)+80)/55);
-const band=(lo,hi)=>{let sum=0,n=0;for(const g of groups)if(g.low<hi&&g.high>lo){sum+=level(g);n++;}return n?sum/n:0;};
-const music=a.music||{},mouse=a.mouse||{inside:false,nx:.5,ny:.5,clicked:false,pressed:false,vx:0,vy:0};
-const keys=a.keyboard||{pressed:()=>false,down:()=>false};
-s.motion??={time:0,low:0,mid:0,high:0,energy:0,trend:0,pulse:0};
-const m=s.motion;m.time+=dt;
-for(const [key,target]of [['low',band(20,250)],['mid',band(250,4000)],['high',band(4000,22000)],['energy',music.energy??Math.max(0,...groups.map(level))],['trend',music.trend??0]])m[key]+=(target-m[key])*(1-Math.exp(-dt/(key==='trend'?1.5:.24)));
-m.pulse=Math.max(music.pulse??0,m.pulse*Math.exp(-dt/.35));
-const t=m.time,low=m.low,mid=m.mid,high=m.high,energy=m.energy,trend=m.trend;
-const wave=u=>{const v=a.waveform||[];return v.length?v[Math.min(v.length-1,Math.floor(clamp(u)*v.length))]||0:0;};
-const hint=text=>{p.push();p.resetMatrix();p.colorMode(p.RGB,255);p.noStroke();p.fill(12,17,25,150);p.rect(10,h-29,Math.min(w-20,text.length*6+18),20,5);p.fill(220,225,230,180);p.textFont('monospace');p.textSize(10);p.textAlign(p.LEFT,p.CENTER);p.text(text,18,h-19);p.pop();};
-p.blendMode(p.BLEND);p.colorMode(p.RGB,255);p.rectMode(p.CORNER);p.ellipseMode(p.CENTER);
-
-p.background(114,151,185);
-const c=p.drawingContext;
-const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#6d96bd');sky.addColorStop(1,'#d5d7d0');c.fillStyle=sky;c.fillRect(0,0,w,h);
-// Equal-size puff sets interpolate continuously, rather than swapping silhouettes.
-const forms=[
- [[-.7,.1,.44],[-.25,.12,.52],[.25,.12,.52],[.7,.1,.44],[-.50,-.47,.30],[.50,-.47,.30],[-.53,-.72,.19],[.53,-.72,.19],[-.9,.15,.25],[.9,.15,.25],[0,.42,.36],[0,-.05,.42]],
- [[-.4,.15,.50],[0,.1,.58],[.4,.15,.50],[.65,.25,.27],[-.32,-.55,.26],[.27,-.55,.26],[-.34,-.99,.22],[.29,-1.04,.22],[-.65,.4,.30],[.35,.45,.30],[0,.42,.38],[0,-.18,.38]],
- [[-.65,.04,.48],[-.20,.08,.56],[.3,.12,.53],[.70,.05,.39],[1.02,-.05,.22],[1.14,-.26,.24],[1.25,-.4,.19],[1.1,-.5,.21],[-.95,-.08,.3],[.25,.44,.24],[-.25,-.36,.26],[0,-.05,.4]],
- [[-.5,.1,.45],[0,.15,.63],[.45,.1,.48],[.78,.1,.26],[.94,-.11,.22],[1.03,-.34,.17],[-.88,-.22,.20],[-1.02,.04,.19],[-.86,.30,.20],[0,-.40,.34],[0,-.65,.18],[0,.53,.40]]
-];
-if(!s.clouds){s.clouds=Array.from({length:22},(_,i)=>({x:((i%6)+rand(.05,.95))/6,y:.14+Math.floor(i/6)*.22+rand(-.025,.025),scale:rand(.075,.14)*(i<6?.70:1),seed:rand(0,10),points:forms[i%4].map(v=>[...v])}));s.form=0;s.next=20;}
-if(t>s.next||mouse.clicked||keys.pressed('KeyN')){s.form=(s.form+1)%4;s.next=t+22;}
-for(let i=0;i<s.clouds.length;i++){
- const cloud=s.clouds[i],layer=i%3, signal=[low,mid,high][layer];
- cloud.phase=(cloud.phase??cloud.seed)+dt*(.20+layer*.18+signal*2);
- const size=Math.min(w,h)*cloud.scale*(.9+signal*.48),form=forms[(s.form+i)%4];
- const thickness=.72+signal*.85,opacity=.40+signal*.50;
- cloud.x+=dt*(.009+layer*.007+signal*.065+trend*.002+clamp(mouse.vx||0,-500,500)*.000015);if(cloud.x>1.35)cloud.x=-.35;if(cloud.x<-.35)cloud.x=1.35;
- const x=cloud.x*w,y=cloud.y*h+Math.sin(cloud.phase)*h*(.035+layer*.019+signal*.06);
- for(let j=0;j<form.length;j++){
-  const v=cloud.points[j];for(let k=0;k<3;k++)v[k]+=(form[j][k]-v[k])*(1-Math.exp(-dt/3));
-  const xx=x+(v[0]+Math.sin(t*.20+j+cloud.seed)*.025)*size,yy=y+v[1]*size*thickness,r=size*v[2]*(1+mid*.04);
-  const glow=c.createRadialGradient(xx-r*.15,yy-r*.22,r*.12,xx,yy,r*1.22);
-  glow.addColorStop(0,'rgba(255,253,242,.78)');glow.addColorStop(.55,'rgba(249,248,241,.63)');glow.addColorStop(1,'rgba(243,247,248,0)');
-  c.save();c.globalAlpha=opacity;c.translate(xx,yy);c.scale(1,thickness);c.translate(-xx,-yy);c.fillStyle=glow;c.beginPath();c.arc(xx,yy,r*1.22,0,TAU);c.fill();c.restore();
- }
+// @putsputs-direct-webgl
+// @putsputs-blendable
+// Three wind layers driven independently by bass, mids and treble.
+const fragment = `#version 300 es
+precision highp float;
+uniform vec3 iResolution;
+uniform float iTime;
+uniform vec3 iBands;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+ vec2 i=floor(p),f=fract(p);
+ vec2 a=f*f*f*(f*(6.*f-15.)+10.);
+ return mix(mix(hash(i),hash(i+vec2(1.,0.)),a.x),mix(hash(i+vec2(0.,1.)),hash(i+1.),a.x),a.y);
 }
-if(a.showHUD)hint('N / clique: outra pareidolia · mouse: vento');
+float cloudNoise(vec2 p){
+ float n=0.,amplitude=.54;
+ for(int j=0;j<4;j++){n+=noise(p)*amplitude;p=mat2(1.64,1.16,-1.16,1.64)*p;amplitude*=.49;}
+ return n;
+}
+uniform vec3 iDrift;
+void mainImage(out vec4 color,in vec2 pixel){
+ vec2 uv=pixel/iResolution.xy;
+ vec3 sky=mix(vec3(.72,.78,.86),vec3(.12,.35,.62),smoothstep(.0,1.,uv.y));
+ float sun=exp(-length(uv-vec2(.74,.72))*3.6);
+ sky+=vec3(.19,.12,.05)*sun;
+ for(int layer=0;layer<3;layer++){
+  float k=float(layer),scale=2.7+k*1.5;
+  vec2 p=vec2(uv.x*iResolution.x/iResolution.y,uv.y*(1.05+k*.34))*scale;
+  p+=vec2(-iDrift[layer],k*43.+iTime*(.039+k*.012));
+  float density=cloudNoise(p);
+  float high=iBands[layer];
+  float height=sin(iTime*(.09+k*.05)+uv.x*3.2+k)*(.045+high*.09);
+  float envelope=exp(-pow((uv.y-.38-k*.14-height)/( .26+high*.09),2.));
+  float opacity=smoothstep(.41,.70,density)*envelope*(.58+k*.14);
+  vec3 cloud=mix(vec3(.39,.48,.61),vec3(1.,.93,.82),smoothstep(.45,.73,density+uv.y*.11));
+  sky=mix(sky,cloud,opacity);
+ }
+ color=vec4(sky,1.);
+}
+out vec4 outputColor;
+void main(){mainImage(outputColor,gl_FragCoord.xy);}
+`;
+if (!s.surface) {
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl2');
+  if (!gl) throw new Error('WebGL 2 indisponível.');
+  const program = gl.createProgram();
+  const compile = (kind, code) => {
+    const shader = gl.createShader(kind);
+    gl.shaderSource(shader, code);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      const error = gl.getShaderInfoLog(shader);
+      gl.deleteShader(shader);
+      throw new Error(error);
+    }
+    gl.attachShader(program, shader);
+    gl.deleteShader(shader);
+  };
+  try {
+    compile(gl.VERTEX_SHADER, `#version 300 es
+void main(){
+  vec2 corner=vec2(float((gl_VertexID << 1) & 2),float(gl_VertexID & 2));
+  gl_Position=vec4(corner*2.0-1.0,0.0,1.0);
+}`);
+    compile(gl.FRAGMENT_SHADER, fragment);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+  } catch (error) {
+    gl.deleteProgram(program);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    throw error;
+  }
+  const resolution = gl.getUniformLocation(program, 'iResolution');
+  const time = gl.getUniformLocation(program, 'iTime');
+  const bands = gl.getUniformLocation(program, 'iBands');
+  const drift=gl.getUniformLocation(program,'iDrift');
+  s.surface = {canvas, gl, program, resolution, time, bands, drift, offsets:[0,0,0], wind:[0,0,0]};
+  s.dispose = () => {
+    canvas.remove();
+    gl.deleteProgram(program);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+  };
+}
+const {canvas, gl, program, resolution, time, bands, drift, offsets, wind} = s.surface;
+const scale = Math.min(a.drawFinishedShader ? 1.35 : .65, a.renderScale ?? .65);
+const width = Math.max(1, Math.round(p.width * scale));
+const height = Math.max(1, Math.round(p.height * scale));
+if (canvas.width !== width) canvas.width = width;
+if (canvas.height !== height) canvas.height = height;
+gl.viewport(0, 0, width, height);
+gl.useProgram(program);
+gl.uniform3f(resolution, width, height, 1);
+gl.uniform1f(time, a.time || 0);
+const dt=Math.min(.06,a.dt??1/60);
+const energy=[a.bass||0,a.mid||0,a.treble||0];
+for(let i=0;i<3;i++){
+ wind[i]+=(energy[i]-wind[i])*(1-Math.exp(-dt/.7));
+ offsets[i]+=dt*(.075+i*.041+wind[i]*.58);
+}
+gl.uniform3fv(bands,wind);
+gl.uniform3fv(drift,offsets);
+if (a.drawFinishedShader) a.drawFinishedShader(s.surface, width, height);
+else gl.drawArrays(gl.TRIANGLES, 0, 3);
+if (a.directWebGL && a.presentWebGL) a.presentWebGL(canvas);
+else p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);

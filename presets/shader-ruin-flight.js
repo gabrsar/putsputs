@@ -11,30 +11,39 @@ float boxDistance(vec3 p,vec3 b){
  vec3 q=abs(p)-b;
  return length(max(q,0.))+min(0.,max(q.x,max(q.y,q.z)));
 }
+float hash(vec2 id){return fract(sin(dot(id,vec2(39.34,73.12)))*43758.5453);}
+float box(vec3 p,vec3 b){vec3 q=abs(p)-b;return length(max(q,0.))+min(0.,max(q.x,max(q.y,q.z)));}
+float field(vec3 p){
+ vec2 id=floor(p.xz/2.4);
+ vec2 q=mod(p.xz,2.4)-1.2;
+ float height=.43+hash(id)*1.55;
+ float tower=box(vec3(q.x,p.y-height*.5,q.y),vec3(.64,height*.5,.64));
+ float side=box(vec3(q.x,p.y+.08,q.y),vec3(.91,.14,.86));
+ return min(p.y+.12,min(tower,side));
+}
 void mainImage(out vec4 color,in vec2 pixel){
  vec2 uv=(2.*pixel-iResolution.xy)/iResolution.y;
- float time=iTime*.6;
- vec3 eye=vec3(0.,1.8,time);
- vec3 ray=normalize(vec3(uv.x,uv.y-.27,1.35));
- vec3 sky=mix(vec3(.16,.07,.09),vec3(.025,.022,.073),clamp(.5+ray.y,0.,1.));
- float t=.03;
- for(int j=0;j<64;j++){
-  vec3 p=eye+ray*t;
-  vec2 id=floor(p.xz);
-  vec2 local=fract(p.xz)-.5;
-  float h=.13+tile(id)*1.1;
-  float tower=boxDistance(vec3(local.x,p.y-h,local.y),vec3(.32,h,.32));
-  float ground=p.y;
-  float d=min(ground,tower);
-  if(d<.003){
-   float line=1.-smoothstep(.023,.069,abs(fract(p.y*9.+tile(id)*4.)-.5));
-   vec3 lit=vec3(.18,.19,.27)*(1.-.29*max(abs(local.x),abs(local.y)));
-   if(tower<ground)lit+=line*vec3(.96,.26,.08)*(.25+iBands.x*.85);
-   sky=mix(lit,sky,1.-exp(-t*.10));
+ vec3 eye=vec3(0.,1.42,iTime*.68),ray=normalize(vec3(uv.x,uv.y-.13,1.46));
+ vec3 sky=mix(vec3(.23,.095,.139),vec3(.021,.023,.073),smoothstep(-.35,.55,ray.y));
+ float moon=length(ray.xy-vec2(-.24,.15));
+ sky+=vec3(.61,.29,.17)*(1.-smoothstep(.075,.080,moon))*.6;
+ float travel=.03;
+ for(int i=0;i<83;i++){
+  vec3 p=eye+ray*travel;
+  float d=field(p);
+  if(d<.006){
+   vec2 e=vec2(.012,0.);
+   vec3 n=normalize(vec3(field(p+e.xyy)-field(p-e.xyy),field(p+e.yxy)-field(p-e.yxy),field(p+e.yyx)-field(p-e.yyx)));
+   float sun=max(0.,dot(n,normalize(vec3(-.61,.79,.22))));
+   vec3 stone=mix(vec3(.071,.071,.113),vec3(.29,.22,.29),sun);
+   float slots=1.-smoothstep(.055,.135,abs(fract(p.y*4.2+.1)-.5));
+   float chips=.32+.68*step(.27,hash(floor(vec2((p.x+p.z)*4.,p.y*4.2))));
+   stone+=vec3(.96,.29,.09)*slots*chips*(1.-abs(n.y))*(.11+iBands.x*.72);
+   sky=mix(sky,stone,exp(-travel*.071));
    break;
   }
-  t+=max(.012,d*.65);
-  if(t>19.)break;
+  travel+=clamp(d*.72,.018,.48);
+  if(travel>21.)break;
  }
  color=vec4(sky,1.);
 }
