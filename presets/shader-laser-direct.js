@@ -13,7 +13,15 @@ for(int j=0;j<3;j++){
  vec2 p=uv-vec2((k-1.)*.63,sin(iTime*.7+k*2.)*.24);
  float r=length(p),a=atan(p.y,p.x)+iTime*(.8-k*.55);
  // Ten times as many angular spokes and radial rings: about 100x the dot density.
- float dots=pow(.5+.5*cos(a*140.),10.)*pow(.5+.5*cos(r*300.-iTime*3.),8.);
+ float dots=0.;
+ for(int layer=0;layer<50;layer++){
+  float f=float(layer);
+  float phase=f*2.399963;
+  float spokes=pow(.5+.5*cos(a*(140.+2.*f)+phase+iTime*.09*f),22.);
+  float rings=pow(.5+.5*cos(r*(300.+3.*f)-iTime*3.+phase*1.7),20.);
+  dots+=spokes*rings;
+ }
+ dots=1.-exp(-dots*.65);
  dots*=smoothstep(.035,.22,r);
  float ray=pow(.5+.5*cos(a*14.),130.)*exp(-r*4.);
  vec3 hue=.52+.48*cos(vec3(0.,2.,4.)+k*2.);

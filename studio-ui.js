@@ -108,6 +108,7 @@
   if(!key){window.prompt('Escolha um visual integrado para compartilhar.');return;}
   const url=new URL(location.pathname,location.origin);
   url.searchParams.set('preset',key);
+  if(key==='shader-laser'&&sharedParams.get('renderer')==='webgl')url.searchParams.set('renderer','webgl');
   for(const id of settings)url.searchParams.set(id,$(id).value);
   try{await navigator.clipboard.writeText(url.href);$('share-visual').textContent='Link copiado';}
   catch{window.prompt('Copie o link do visual:',url.href);}
