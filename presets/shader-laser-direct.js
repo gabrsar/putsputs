@@ -5,6 +5,7 @@ precision highp float;
 uniform vec3 iResolution;
 uniform float iTime;
 uniform vec3 iBands;
+uniform int iStress;
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 vec2 uv=(2.*fragCoord-iResolution.xy)/iResolution.y;
 vec3 light=vec3(.008,.014,.03);
@@ -26,6 +27,20 @@ for(int j=0;j<3;j++){
  float ray=pow(.5+.5*cos(a*14.),130.)*exp(-r*4.);
  vec3 hue=.52+.48*cos(vec3(0.,2.,4.)+k*2.);
  light+=hue*(dots*(.65+iBands.z)+ray*(.11+iBands.x*.4));
+}
+if(iStress>0){
+ float haze=0.;
+ vec3 direction=normalize(vec3(uv,1.4));
+ for(int step=0;step<96;step++){
+  if(step>=iStress) break;
+  float distance=.12+float(step)*.055;
+  vec3 point=direction*distance;
+  point.xy+=vec2(sin(iTime*.5+point.z),cos(iTime*.37+point.z))*.25;
+  float beam=sin(point.x*19.+point.z*5.)*cos(point.y*21.-point.z*4.);
+  float cloud=sin(point.x*31.+iTime)*sin(point.y*27.-point.z*11.);
+  haze+=max(0.,beam*.65+cloud*.35-.35)*exp(-distance*.42);
+ }
+ light+=vec3(.22,.38,.86)*(1.-exp(-haze*.12));
 }
 fragColor=vec4(light,1.);
 }
@@ -66,15 +81,18 @@ void main(){
   const resolution = gl.getUniformLocation(program, 'iResolution');
   const time = gl.getUniformLocation(program, 'iTime');
   const bands = gl.getUniformLocation(program, 'iBands');
-  s.surface = {canvas, gl, program, resolution, time, bands};
+  const stress = gl.getUniformLocation(program, 'iStress');
+  const requestedSteps = Number(new URLSearchParams(location.search).get('stress'));
+  const steps = Number.isFinite(requestedSteps) ? Math.min(96, Math.max(0, Math.round(requestedSteps))) : 0;
+  s.surface = {canvas, gl, program, resolution, time, bands, stress, steps};
   s.dispose = () => {
     canvas.remove();
     gl.deleteProgram(program);
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };
 }
-const {canvas, gl, program, resolution, time, bands} = s.surface;
-const scale = Math.min(.65, a.renderScale ?? .65);
+const {canvas, gl, program, resolution, time, bands, stress, steps} = s.surface;
+const scale = steps ? 1 : Math.min(.65, a.renderScale ?? .65);
 const width = Math.max(1, Math.round(p.width * scale));
 const height = Math.max(1, Math.round(p.height * scale));
 if (canvas.width !== width) canvas.width = width;
@@ -84,6 +102,7 @@ gl.useProgram(program);
 gl.uniform3f(resolution, width, height, 1);
 gl.uniform1f(time, a.time || 0);
 gl.uniform3f(bands, a.bass || 0, a.mid || 0, a.treble || 0);
+gl.uniform1i(stress, steps);
 gl.drawArrays(gl.TRIANGLES, 0, 3);
 if (a.directWebGL) {
   if (!canvas.isConnected) {

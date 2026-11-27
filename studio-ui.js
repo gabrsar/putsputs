@@ -109,6 +109,7 @@
   const url=new URL(location.pathname,location.origin);
   url.searchParams.set('preset',key);
   if(key==='shader-laser'&&sharedParams.get('renderer')==='webgl')url.searchParams.set('renderer','webgl');
+  if(key.startsWith('shader-laser')&&sharedParams.has('stress'))url.searchParams.set('stress',sharedParams.get('stress'));
   for(const id of settings)url.searchParams.set(id,$(id).value);
   try{await navigator.clipboard.writeText(url.href);$('share-visual').textContent='Link copiado';}
   catch{window.prompt('Copie o link do visual:',url.href);}
