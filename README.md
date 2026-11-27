@@ -103,7 +103,7 @@ Library cards render the actual preset code with one shared preview renderer, ca
 
 The compact layout keeps the canvas and playback controls inside the mobile viewport, including landscape and safe areas. Play/Create open scrollable panels; the Visuals library and audio source picker remain separate contextual controls. The language menu detects browser preferences by default and persists an explicit choice locally. Code, filenames, personal presets and song titles stay unchanged.
 
-Sample music includes seven unmodified Kevin MacLeod tracks under CC BY 4.0. See `assets/audio/LICENSE.txt` and the in-app credits. Audio files load only when selected; the initial silent visual uses the existing precomputed Cipher analysis. Tap the animated sound prompt to start actual audio playback.
+The default sample is the first movement of Beethoven's Symphony No. 5, performed by the Skidmore College Orchestra and released into the public domain. The catalog also includes Kevin MacLeod tracks under CC BY 4.0. See `assets/audio/LICENSE.txt` and the in-app credits. Audio files load when selected, and the initial silent visual uses a precomputed analysis of the default recording. Tap the animated sound prompt to start actual audio playback.
 
 Automatic rendering limits pixel density and backs off expensive WebGL resolution after sustained slow frames. The preset library renders only nearby thumbnails and reuses cached images; desktop hover previews are capped at 12 fps. Higher quality can be selected explicitly in Play.
 

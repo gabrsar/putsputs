@@ -1,7 +1,7 @@
 (() => {
   const tracks = window.PutsTracks || {};
   const trackKeys = Object.keys(tracks);
-  const initialKey = trackKeys[0];
+  const initialKey = tracks['beethoven-five'] ? 'beethoven-five' : trackKeys[0];
   const picker = $('example-track');
   const stageMute = $('unmute-stage');
   const mute = $('music-mute');

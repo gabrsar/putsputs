@@ -14,9 +14,19 @@
   ["electrodoodle", "Electrodoodle", 166, "USUAN1200079"],
   ["night-of-the-owl", "Night of the Owl", 233, "USUAN1100597"]
  ];
- window.PutsTracks=Object.fromEntries(entries.map(([key,name,duration,isrc])=>[key,{
+ const macLeodTracks=Object.fromEntries(entries.map(([key,name,duration,isrc])=>[key,{
   name,duration,author,license,licenseUrl,
   source:`https://incompetech.com/music/royalty-free/index.html?isrc=${isrc}`,
   credit:`${name} — ${author} (incompetech.com) · ${license}`
  }]));
+ window.PutsTracks={
+  'beethoven-five':{
+   name:'Beethoven · 5ª Sinfonia (Allegro con brio)',
+   author:'Skidmore College Orchestra',
+   duration:500.115,
+   license:'Domínio público',
+   source:'https://commons.wikimedia.org/wiki/File:Ludwig_van_Beethoven_-_symphony_no._5_in_c_minor,_op._67_-_i._allegro_con_brio.ogg'
+  },
+  ...macLeodTracks
+ };
 })();
