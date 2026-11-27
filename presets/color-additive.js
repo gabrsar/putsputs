@@ -19,17 +19,33 @@ const layer=key=>{
 };
 const fresh=()=>{const g=layer('ink');g.clear();g.resetMatrix();g.blendMode(p.BLEND);g.colorMode(p.RGB,255);return g;};
 const present=(g,ttl=.7,bloom=4)=>{
- const trail=layer('history');trail.resetMatrix();trail.blendMode(p.BLEND);trail.colorMode(p.RGB,255);
- const c=trail.drawingContext;c.save();try{c.setTransform(trail.pixelDensity(),0,0,trail.pixelDensity(),0,0);c.globalCompositeOperation='copy';c.filter='blur(.35px)';c.drawImage(trail.canvas,0,0,w,h);}finally{c.restore();}
- trail.background(3,6,12,255*(1-Math.exp(-dt/ttl)));trail.image(g,0,0,w,h);
- p.blendMode(p.BLEND);p.colorMode(p.RGB,255);p.background(3,6,12);p.imageMode(p.CORNER);
- const ctx=p.drawingContext;ctx.save();try{ctx.filter='blur('+bloom+'px)';ctx.globalAlpha=.45;p.image(trail,0,0,w,h);ctx.filter='none';ctx.globalAlpha=1;p.image(trail,0,0,w,h);}finally{ctx.restore();}
+ const trail=layer('history'),c=trail.drawingContext;
+ const decay=1-Math.exp(-dt/ttl);
+ c.save();
+ try{
+  c.setTransform(trail.pixelDensity(),0,0,trail.pixelDensity(),0,0);
+  c.globalCompositeOperation='destination-out';
+  c.globalAlpha=decay;
+  c.fillStyle='#000';c.fillRect(0,0,w,h);
+  c.globalCompositeOperation='lighter';
+  c.globalAlpha=decay;
+  c.drawImage(g.canvas,0,0,w,h);
+ }finally{c.restore();}
+ p.blendMode(p.BLEND);p.colorMode(p.RGB,255);p.background(3,6,12);
+ const ctx=p.drawingContext;
+ ctx.save();
+ try{
+  ctx.globalCompositeOperation='lighter';
+  ctx.drawImage(trail.canvas,0,0,w,h);
+  ctx.filter='blur('+bloom+'px)';
+  ctx.globalAlpha=.44;
+  ctx.drawImage(trail.canvas,0,0,w,h);
+ }finally{ctx.restore();}
 };
-p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
-const g=fresh();g.noStroke();g.blendMode(p.SCREEN);
+const g=fresh();g.noStroke();g.blendMode(p.ADD);
 for(let side=0;side<2;side++){
- const phase=t*(2.1+low*.8)+side*Math.PI,flash=.18+.82*Math.pow(Math.max(0,Math.sin(phase)),3),v=side?high:low;
+ const phase=t*(2.1+low*.8)+side*Math.PI,flash=.26+.74*Math.pow(Math.max(0,Math.sin(phase)),3),v=side?high:low;
  const x=w*(side?.76:.24)+Math.sin(t*.24+side)*w*.11,y=h*(.48+Math.sin(t*.31+side)*.17);
  const c=g.drawingContext,rad=Math.hypot(w,h)*(.40+v*.25),gradient=c.createRadialGradient(x,y,0,x,y,rad);
  gradient.addColorStop(0,side?'rgba(72,132,255,'+(flash*.8)+')':'rgba(255,40,65,'+(flash*.8)+')');gradient.addColorStop(.18,side?'rgba(25,65,245,'+(flash*.40)+')':'rgba(220,12,30,'+(flash*.40)+')');gradient.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=gradient;c.fillRect(0,0,w,h);

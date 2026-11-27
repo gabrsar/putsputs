@@ -33,7 +33,7 @@
  $('library-dialog').addEventListener('click',event=>{if(event.target===$('library-dialog')){const r=event.target.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)event.target.close();}});
  $('deck-prev').onclick=()=>$('preset-prev').click();$('deck-next').onclick=()=>$('preset-next').click();
  $('preset-hold').onclick=()=>{if(window.presetLibrary.shuffling)window.presetLibrary.hold();else $('shuffle-presets').click();};
- function sequence(){const running=window.presetLibrary.shuffling;$('preset-hold-label').textContent=running?'Ⅱ Pausar troca':'▶ Retomar troca';$('preset-hold').setAttribute('aria-label',running?'Pausar troca de visuais':'Retomar troca de visuais');$('preset-hold').setAttribute('aria-pressed',String(!running));$('sequence-state').textContent=running?'Troca automática':'Visual fixado';}
+ function sequence(){const running=window.presetLibrary.shuffling;const label=running?'Pausar troca de visuais':'Retomar troca de visuais';$('preset-hold-icon').setAttribute('href',running?'#i-cycle':'#i-cycle-off');$('preset-hold').setAttribute('aria-label',label);$('preset-hold').title=label;$('preset-hold').setAttribute('aria-pressed',String(!running));$('sequence-state').textContent=running?'Troca automática':'Visual fixado';}
  document.addEventListener('avs-sequence-changed',sequence);
  // Capture before preset-specific listeners: app shortcuts never reach the camera or scripts.
  document.addEventListener('keydown',event=>{
@@ -42,7 +42,7 @@
   if(target){event.preventDefault();event.stopImmediatePropagation();$(target).click();}
  },true);
  let theme='night';try{theme=localStorage.getItem('avs-theme')||'night';}catch{}
- function setTheme(value){theme=value==='day'?'day':'night';body.dataset.theme=theme;$('theme-toggle').setAttribute('aria-pressed',String(theme==='day'));$('theme-toggle').setAttribute('aria-label',theme==='day'?'Ativar modo noite':'Ativar modo dia');document.querySelector('meta[name="theme-color"]').content=theme==='day'?'#e5e9ee':'#151820';try{localStorage.setItem('avs-theme',theme);}catch{}}
+ function setTheme(value){theme=value==='day'?'day':'night';body.dataset.theme=theme;$('theme-toggle').querySelector('use').setAttribute('href',theme==='day'?'#i-moon':'#i-sun');$('theme-toggle').setAttribute('aria-pressed',String(theme==='day'));$('theme-toggle').setAttribute('aria-label',theme==='day'?'Ativar modo noite':'Ativar modo dia');document.querySelector('meta[name="theme-color"]').content=theme==='day'?'#e5e9ee':'#151820';try{localStorage.setItem('avs-theme',theme);}catch{}}
  $('theme-toggle').onclick=()=>setTheme(theme==='day'?'night':'day');setTheme(theme);
  function favorite(value){if(!value)return;if(favorites.has(value))favorites.delete(value);else favorites.add(value);try{localStorage.setItem('avs-favorites-v1',JSON.stringify([...favorites]));}catch{}renderLibrary();updateSelected();}
  $('favorite-preset').onclick=()=>favorite($('preset').value);
