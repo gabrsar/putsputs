@@ -125,9 +125,10 @@ $('file').onclick=()=>$('upload').click();$('upload').onchange=async e=>{const f
 $('fft').onchange=resizeFFT;
 let drawCode,state={},sketch;
 let directWebGL=false, canBlend=true;
-a.presentWebGL=canvas=>{
- if(canvas.isConnected)return;
- canvas.className='direct-webgl-stage';
+a.presentWebGL=(canvas,overlay=false)=>{
+ if(canvas.parentElement===$('stage')&&canvas.classList.contains('direct-webgl-stage'))return;
+ canvas.classList.add('direct-webgl-stage');
+ canvas.classList.toggle('direct-webgl-overlay',overlay);
  canvas.setAttribute('aria-hidden','true');
  $('stage').append(canvas);
 };
@@ -163,10 +164,10 @@ function disposeCurrentState(){
 
 const frameRenderSamples = [];
 let measuredState;
-function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const direct=code.startsWith('// @putsputs-direct-webgl')&&new URLSearchParams(location.search).get('renderer')!=='canvas';const blendable=!direct||/^file:presets\/shader-(laser(?:-direct)?|fire|tunnel)\.js$/.test($('preset').value);
+function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const direct=code.startsWith('// @putsputs-direct-webgl')&&new URLSearchParams(location.search).get('renderer')!=='canvas';const blendable=!direct||/^\/\/ @putsputs-direct-webgl\r?\n\/\/ @putsputs-blendable/.test(code);
  if(blendable&&canBlend&&sketch?.canvas&&drawCode&&window.visualTransition){
   // During the dissolve, the existing compositor draws both presets into its 2D layers.
-  if(directWebGL)state.surface?.canvas.remove();
+  if(directWebGL)$('stage').querySelector('.direct-webgl-stage')?.remove();
   window.visualTransition.begin(sketch.canvas,{fn:drawCode,state,canBlend,directWebGL});
  }else{
   window.visualTransition?.cancel();

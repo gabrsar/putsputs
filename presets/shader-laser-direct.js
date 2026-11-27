@@ -1,4 +1,5 @@
 // @putsputs-direct-webgl
+// @putsputs-blendable
 // Shadertoy-style single Image pass, with audio supplied as iBands (bass, mid, treble).
 const fragment = `#version 300 es
 precision highp float;

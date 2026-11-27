@@ -1,3 +1,5 @@
+// @putsputs-direct-webgl
+// @putsputs-blendable
 // TERRENO MUSICAL / faces opacas, arestas e objetos low poly esparsos.
 /* global p, a, s */
 const dt=Math.min(a.dt||1/60,.06),t=a.time,w=p.width,h=p.height;
@@ -15,7 +17,7 @@ const levels=Array.from({length:bandCount},(_,i)=>{
 const loud=levels.length?Math.max(...levels):0;
 const HISTORY=24,RATE=8,COLS=32,WIDTH=1500,LENGTH=4200;
 if(!s.g){
-  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>s.g.remove();
+  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>{s.g.canvas.remove();s.g.remove();};
   s.rows=[];s.objects=[];s.lastSample=-10;s.lastSpawn=-10;s.nextSpawn=t+6;s.previous=0;
 }
 // Resolução da malha independente das bandas: sem colunas demarcando frequências.
@@ -147,6 +149,7 @@ try{
 }finally{
   gl.depthMask(true);g.blendMode(p.BLEND);g.pop();
 }
-p.blendMode(p.BLEND);p.colorMode(p.RGB,255);p.background(2,3,10);p.imageMode(p.CORNER);p.image(g,0,0,w,h);
+p.blendMode(p.BLEND);p.colorMode(p.RGB,255);if(a.directWebGL&&a.presentWebGL){p.clear();a.presentWebGL(g.canvas,true);}
+else{p.background(2,3,10);p.imageMode(p.CORNER);p.image(g,0,0,w,h);}
 p.noStroke();p.fill(130,185,180,170);p.textSize(10);p.textAlign(p.LEFT,p.TOP);
 if(a.showHUD)p.text('MUNDO MUSICAL',12,12);

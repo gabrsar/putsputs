@@ -1,3 +1,5 @@
+// @putsputs-direct-webgl
+// @putsputs-blendable
 // LORENZ / integração RK4 com trajetória limitada.
 /* global p, a, s */
 const dt=Math.min(a.dt||1/60,.06),t=a.time,w=p.width,h=p.height;
@@ -13,7 +15,7 @@ p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
 const DUAL=false;
 if(!s.g){
-  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>s.g.remove();
+  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>{s.g.canvas.remove();s.g.remove();};
   s.orbits=Array.from({length:DUAL?2:1},(_,i)=>({x:.1+i*.0002,y:0,z:0,points:[],channel:i}));
   s.clock=0;s.particleClock=0;s.low=0;s.high=0;s.mid=0;s.power=0;s.rotation=0;s.hue=195;s.impact=0;
   s.particles=[];s.active=64;s.warmed=false;
@@ -95,4 +97,5 @@ for(let j=0;j<active;j++){
   g.strokeWeight(1.4+dot.seed+s.high*1.8+s.impact*3.2);
   g.point(dot.x+offset,dot.y*.9,-dot.z+25);
 }
-p.blendMode(p.BLEND);p.background(2,3,10);p.imageMode(p.CORNER);p.image(g,0,0,w,h);
+p.blendMode(p.BLEND);if(a.directWebGL&&a.presentWebGL)a.presentWebGL(g.canvas);
+else{p.background(2,3,10);p.imageMode(p.CORNER);p.image(g,0,0,w,h);}

@@ -1,3 +1,5 @@
+// @putsputs-direct-webgl
+// @putsputs-blendable
 // FRACTAL / Mandelbrot, deriva suave e paleta espectral.
 /* global p, a, s */
 const dt=Math.min(a.dt||1/60,.06),t=a.time,w=p.width,h=p.height;
@@ -13,7 +15,7 @@ p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
 const JULIA=false;
 if(!s.g){
-  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>s.g.remove();
+  s.g=p.createGraphics(64,64,p.WEBGL);s.g.pixelDensity(1);s.g.setAttributes('antialias',true);s.dispose=()=>{s.g.canvas.remove();s.g.remove();};
   s.shader=s.g.createShader(`
     precision highp float;
     attribute vec3 aPosition;attribute vec2 aTexCoord;varying vec2 uv;
@@ -66,4 +68,5 @@ if(g.width!==rw||g.height!==rh)g.resizeCanvas(rw,rh);
 g.clear();g.resetMatrix();g.shader(s.shader);g.noStroke();
 for(const [name,value]of Object.entries({resolution:[g.width,g.height],time:cam.clock,bass:cam.low,treble:cam.high,power:cam.power,isJulia:JULIA?1:0,cameraCenter:[cam.x,cam.y],cameraZoom:Math.exp(cam.logZoom)}))s.shader.setUniform(name,value);
 g.rect(0,0,1,1);
-p.background(2,3,10);p.imageMode(p.CORNER);p.image(g,0,0,w,h);
+if(a.directWebGL&&a.presentWebGL)a.presentWebGL(g.canvas);
+else{p.background(2,3,10);p.imageMode(p.CORNER);p.image(g,0,0,w,h);}
