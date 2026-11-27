@@ -88,12 +88,13 @@
  window.addEventListener('pagehide',()=>{if(dirty)stashDraft();});
  $('recover-draft').onclick=()=>{try{const d=JSON.parse(localStorage.getItem('avs-draft-v1'));if(!d||typeof d.code!=='string')return;window.presetLibrary.pause();$('preset').value='';codeEditor.setValue(d.code);$('local-preset-name').value=d.name||'Rascunho';$('preset-seed').value=d.seed||'1337';apply();document.dispatchEvent(new Event('avs-preset-draft'));}catch{$('draft-state').textContent='Não foi possível recuperar este rascunho.';}};
  try{$('recover-draft').hidden=!localStorage.getItem('avs-draft-v1');}catch{}
- let fps=60;setInterval(()=>{fps+=(Math.max(0,a.fps||0)-fps)*.25;$('fps-pill').textContent=Math.round(fps)+' FPS';$('visual-error').hidden=!$('error').textContent.trim();},400);
+ let fps=60;setInterval(()=>{fps+=(Math.max(0,a.fps||0)-fps)*.25;$('fps-pill').textContent=Math.round(fps)+' FPS'+(Number.isFinite(a.renderFrameMs)?' · CPU '+a.renderFrameMs.toFixed(2)+' ms':'')+(Number.isFinite(a.gpuFrameMs)?' · GPU '+a.gpuFrameMs.toFixed(2)+' ms':'');$('visual-error').hidden=!$('error').textContent.trim();},400);
  let initial='discover';try{initial=localStorage.getItem('avs-palco-mode')||'discover';}catch{}
  setMode(initial);renderLibrary();updateSelected();
  const sharedParams=new URLSearchParams(location.search);
  const bundled=new Map(window.presetLibrary.entries().filter(entry=>entry.value.startsWith('file:')).map(entry=>[entry.value.replace(/^file:presets\//,'').replace(/\.js$/,''),entry.value]));
  const sharedPreset=bundled.get(sharedParams.get('preset'));
+ if(sharedPreset?.startsWith('file:presets/shader-laser'))$('fps-pill').classList.remove('studio-only');
  const settings=['visual-speed','visual-brightness','render-quality','preset-seed'];
  if(sharedPreset){
   for(const id of settings){
@@ -109,7 +110,6 @@
   const url=new URL(location.pathname,location.origin);
   url.searchParams.set('preset',key);
   if(key==='shader-laser'&&sharedParams.get('renderer')==='webgl')url.searchParams.set('renderer','webgl');
-  if(key.startsWith('shader-laser')&&sharedParams.has('stress'))url.searchParams.set('stress',sharedParams.get('stress'));
   for(const id of settings)url.searchParams.set(id,$(id).value);
   try{await navigator.clipboard.writeText(url.href);$('share-visual').textContent='Link copiado';}
   catch{window.prompt('Copie o link do visual:',url.href);}

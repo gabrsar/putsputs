@@ -53,6 +53,15 @@ for(const d of s.dots) {
 }`};
 const groupEngine=new AudioGroups($('audio-groups'));
 let detailMagnitude=new Float32Array(2048);
+const magnitudeTable = new Float64Array(256);
+let magnitudeMinDb, magnitudeMaxDb;
+function magnitudeByByte(minDb,maxDb){
+ if(minDb!==magnitudeMinDb||maxDb!==magnitudeMaxDb){
+  for(let byte=1;byte<256;byte++)magnitudeTable[byte]=Math.pow(10,(minDb+byte/255*(maxDb-minDb))/20);
+  magnitudeMinDb=minDb;magnitudeMaxDb=maxDb;
+ }
+ return magnitudeTable;
+}
 let detailAnalyser,detailRaw=new Uint8Array(2048),detailSpectrum=new Float32Array(2048);
 let stereoAnalysis;
 let context,analyser,source,stream,media,url,outputGain,mode='silence',generation=0;
@@ -146,7 +155,9 @@ function disposeCurrentState(){
  if(typeof dispose==='function')try{dispose()}catch(error){console.warn('Preset cleanup:',error.message)}
 }
 
-function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const direct=code.startsWith('// @putsputs-direct-webgl')||($('preset').value==='file:presets/shader-laser.js'&&new URLSearchParams(location.search).get('renderer')==='webgl');if(direct||directWebGL){window.visualTransition?.cancel();disposeCurrentState();}else if(sketch?.canvas&&drawCode&&window.visualTransition)window.visualTransition.begin(sketch.canvas,{fn:drawCode,state});else disposeCurrentState();directWebGL=direct;drawCode=fn;state={};resetAutoQuality();window.avsInputs?.reset(sketch?.canvas?sketch:null);if(sketch?.canvas){sketch.canvas.setAttribute('aria-label','Animação que reage ao áudio. Clique para usar mouse e teclado.');sketch.background(0);}$('error').textContent='';try{localStorage.setItem('avs-code',codeEditor.getValue())}catch{}return true}catch(e){$('error').textContent=e.message;return false}}
+const frameRenderSamples = [];
+let measuredState;
+function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const direct=code.startsWith('// @putsputs-direct-webgl')||($('preset').value==='file:presets/shader-laser.js'&&new URLSearchParams(location.search).get('renderer')==='webgl');if(direct||directWebGL){window.visualTransition?.cancel();disposeCurrentState();}else if(sketch?.canvas&&drawCode&&window.visualTransition)window.visualTransition.begin(sketch.canvas,{fn:drawCode,state});else disposeCurrentState();directWebGL=direct;drawCode=fn;state={};frameRenderSamples.length=0;a.renderFrameMs=a.gpuFrameMs=undefined;resetAutoQuality();window.avsInputs?.reset(sketch?.canvas?sketch:null);if(sketch?.canvas){sketch.canvas.setAttribute('aria-label','Animação que reage ao áudio. Clique para usar mouse e teclado.');sketch.background(0);}$('error').textContent='';try{localStorage.setItem('avs-code',codeEditor.getValue())}catch{}return true}catch(e){$('error').textContent=e.message;return false}}
 for(const name of Object.keys(presets))$('preset').add(new Option(name,name));
 $('preset').onchange=()=>{codeEditor.setValue(presets[$('preset').value]);apply()};
 try{codeEditor.setValue(localStorage.getItem('avs-code')||Object.values(presets)[0])}catch{codeEditor.setValue(Object.values(presets)[0])}
@@ -183,7 +194,8 @@ if(mode==='preview'){
   a.sampleRate=packet.sampleRate;a.binHz=a.sampleRate/wave.length;
   for(let i=0;i<a.spectrum.length;i++){const index=Math.min(2047,Math.floor(i*4096/wave.length));const db=-110+packet.bins[index]/255*110;a.spectrum[i]=Math.max(0,Math.min(1,(db+100)/70))*gain;}
   for(let i=0;i<wave.length;i++){const at=i*packet.wave.length/wave.length,j=Math.floor(at);wave[i]=(packet.wave[j]+(packet.wave[Math.min(packet.wave.length-1,j+1)]-packet.wave[j])*(at-j))*gain;}
-  for(let i=0;i<2048;i++){const db=-110+packet.bins[i]/255*110;detailSpectrum[i]=packet.bins[i]/255*gain;detailMagnitude[i]=packet.bins[i]<=0?0:Math.pow(10,db/20)*gain;}
+  const magnitudes=magnitudeByByte(-110,0);
+  for(let i=0;i<2048;i++){const byte=packet.bins[i];detailSpectrum[i]=byte/255*gain;detailMagnitude[i]=magnitudes[byte]*gain;}
  }else{a.spectrum.fill(0);wave.fill(0);detailSpectrum.fill(0);detailMagnitude.fill(0);}
 }
 else if(mode==='remote'){
@@ -195,10 +207,10 @@ if(packet){
   for(let i=0;i<raw.length;i++)a.spectrum[i]=Math.min(1,packet.bins[i]/255*gain);
   for(let i=0;i<wave.length;i++)wave[i]=Math.max(-1,Math.min(1,packet.wave[i]*gain));
   silent=Math.sqrt(wave.reduce((sum,x)=>sum+x*x,0)/wave.length)<.0001;
+  const magnitudes=magnitudeByByte(packet.minDb??-100,packet.maxDb??-30);
   for(let i=0;i<detailSpectrum.length;i++){
     const byte=packet.details[i];detailSpectrum[i]=silent?0:Math.min(1,byte/255*gain);
-    const lo=packet.minDb??-100,hi=packet.maxDb??-30;
-    detailMagnitude[i]=silent||byte===0?0:Math.pow(10,(lo+byte/255*(hi-lo))/20)*gain;
+    detailMagnitude[i]=silent?0:magnitudes[byte]*gain;
   }
   if(silent){a.spectrum.fill(0);wave.fill(0);}
 }else{a.spectrum.fill(0);wave.fill(0);detailSpectrum.fill(0);detailMagnitude.fill(0);}
@@ -209,9 +221,10 @@ else{a.spectrum.fill(0);wave.fill(0)}
 a.bass=a.energy(20,250);a.mid=a.energy(250,4000);a.treble=a.energy(4000,16000);a.level=Math.sqrt(wave.reduce((sum,x)=>sum+x*x,0)/wave.length);
 if(live){
   detailAnalyser.getByteFrequencyData(detailRaw);if(silent)detailRaw.fill(0);
+  const magnitudes=magnitudeByByte(detailAnalyser.minDecibels,detailAnalyser.maxDecibels);
   for(let i=0;i<detailRaw.length;i++){
     const byte=detailRaw[i];detailSpectrum[i]=Math.min(1,byte/255*gain);
-    detailMagnitude[i]=byte===0?0:Math.pow(10,(detailAnalyser.minDecibels+byte/255*(detailAnalyser.maxDecibels-detailAnalyser.minDecibels))/20)*gain;
+    detailMagnitude[i]=magnitudes[byte]*gain;
   }
   a.groups=groupEngine.update(detailSpectrum,a.sampleRate/4096,a.dt,a.time,detailMagnitude);
 }else if(mode==='remote'||mode==='preview'){
@@ -255,7 +268,15 @@ else new p5(p=>{
   observeFrameTime(p);setRenderQuality(p);update(p);
   const analysisTime=a.time,analysisDt=a.dt,speed=Number($('visual-speed')?.value)||1;
   visualTime+=analysisDt*speed;a.time=visualTime;a.dt=analysisDt*speed;
+  const frameStarted=performance.now(), frameState=state;
   if(drawCode){try{if(directWebGL){a.directWebGL=true;try{drawCode(p,a,state);}finally{a.directWebGL=false;}}else window.visualTransition.render(p,a,()=>{p.push();try{drawCode(p,a,state)}finally{p.pop();}});}catch(e){$('error').textContent=e.stack||e.message;disposeCurrentState();const previous=window.visualTransition.recover();drawCode=previous?.fn||null;state=previous?.state||{};}}
+  if(drawCode&&state===frameState&&measuredState===frameState){
+   frameRenderSamples.push(performance.now()-frameStarted);
+   if(frameRenderSamples.length>120)frameRenderSamples.shift();
+   a.renderFrameMs=frameRenderSamples.reduce((sum,ms)=>sum+ms,0)/frameRenderSamples.length;
+   a.gpuFrameMs=state.gpuFrameMs;
+  }
+  measuredState=state;
   a.time=analysisTime;a.dt=analysisDt;
  };
 },$('stage'));
