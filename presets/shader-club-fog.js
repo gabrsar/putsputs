@@ -100,7 +100,7 @@ void main(){
   };
 }
 const {canvas, gl, program, resolution, time, bands} = s.surface;
-const scale = Math.min(.65, a.renderScale ?? .65);
+const scale = Math.min(a.drawFinishedShader ? 1.35 : .65, a.renderScale ?? .65);
 const width = Math.max(1, Math.round(p.width * scale));
 const height = Math.max(1, Math.round(p.height * scale));
 if (canvas.width !== width) canvas.width = width;
@@ -110,6 +110,7 @@ gl.useProgram(program);
 gl.uniform3f(resolution, width, height, 1);
 gl.uniform1f(time, a.time || 0);
 gl.uniform3f(bands, a.bass || 0, a.mid || 0, a.treble || 0);
-gl.drawArrays(gl.TRIANGLES, 0, 3);
+if (a.drawFinishedShader) a.drawFinishedShader(s.surface, width, height);
+else gl.drawArrays(gl.TRIANGLES, 0, 3);
 if (a.directWebGL && a.presentWebGL) a.presentWebGL(canvas);
 else p.drawingContext.drawImage(canvas, 0, 0, p.width, p.height);

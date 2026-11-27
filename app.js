@@ -146,6 +146,7 @@ function setRenderQuality(p){
  const nativeScale=Math.min(1,Math.sqrt(budget/Math.max(1,p.width*p.height)));
  a.renderScale=quality==='auto'?Math.max(.4,nativeScale*autoScale):
   ({performance:.55,balanced:.85,detail:screenDensity,ultra:2})[quality]||1;
+ a.drawFinishedShader=quality==='performance'?null:window.drawFinishedShader;
  const ctx=p.drawingContext;
  ctx.imageSmoothingEnabled=true;
  ctx.imageSmoothingQuality=quality==='performance'||a.renderScale<.85?'low':'high';

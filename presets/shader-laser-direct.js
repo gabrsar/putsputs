@@ -77,7 +77,7 @@ while (queries.length && gl.getQueryParameter(queries[0], gl.QUERY_RESULT_AVAILA
   if (gpuSamples.length > 120) gpuSamples.shift();
   s.gpuFrameMs = gpuSamples.reduce((sum, ms) => sum + ms, 0) / gpuSamples.length;
 }
-const scale = Math.min(.65, a.renderScale ?? .65);
+const scale = Math.min(a.drawFinishedShader ? 1.35 : .65, a.renderScale ?? .65);
 const width = Math.max(1, Math.round(p.width * scale));
 const height = Math.max(1, Math.round(p.height * scale));
 if (canvas.width !== width) canvas.width = width;
@@ -89,7 +89,8 @@ gl.uniform1f(time, a.time || 0);
 gl.uniform3f(bands, a.bass || 0, a.mid || 0, a.treble || 0);
 const query = timer && queries.length < 8 ? gl.createQuery() : null;
 if (query) gl.beginQuery(timer.TIME_ELAPSED_EXT, query);
-gl.drawArrays(gl.TRIANGLES, 0, 3);
+if (a.drawFinishedShader) a.drawFinishedShader(s.surface, width, height);
+else gl.drawArrays(gl.TRIANGLES, 0, 3);
 if (query) {
   gl.endQuery(timer.TIME_ELAPSED_EXT);
   queries.push(query);
