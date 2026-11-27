@@ -24,7 +24,7 @@ const mid=region(250,4000);
 for(const [key,value]of [['low',low],['high',high],['mid',mid],['power',loud]])s[key]+=(value-s[key])*(1-Math.exp(-dt/.16));
 const strongHit=bands.some(g=>g.enabled&&g.hit&&(a.visualLevel?a.visualLevel(g.db??-120):loud)>.25);
 s.impact=Math.max(strongHit?s.power:0,s.impact*Math.exp(-dt/.3));
-s.rotation+=dt*(.045+s.mid*.18+s.low*.10+(a.music?.trend||0)*.025);s.hue+=dt*(1.8+s.high*9+(a.music?.trend||0)*3);
+s.rotation+=dt*.035;s.hue+=dt*(1.8+s.high*9+(a.music?.trend||0)*3);
 // A música altera também o campo, em uma faixa estreita que preserva o atrator.
 s.channels??=[{low:0,mid:0,high:0,energy:0},{low:0,mid:0,high:0,energy:0}];
 for(let channel=0;channel<2;channel++){
@@ -47,17 +47,17 @@ const advance=(o,step)=>{
   o.z=z+step/6*(az+2*bz+2*cz+dz);
 };
 if(!s.warmed){
-  for(let j=0;j<2000;j++)for(const orbit of s.orbits){advance(orbit,.008);if(j>=600)orbit.points.push([orbit.x,orbit.y,orbit.z,0]);}
+  for(let j=0;j<2000;j++)for(const orbit of s.orbits){advance(orbit,.008);if(j>=600)orbit.points.push([orbit.x,orbit.y,orbit.z,0,s.hue]);}
   for(let j=0;j<(DUAL?260:200);j++){
     const orbit=s.orbits[j%s.orbits.length],point=orbit.points[Math.floor(Math.random()*orbit.points.length)];
     s.particles.push({x:point[0]+Math.random()*.03,y:point[1],z:point[2],orbit:j%s.orbits.length,trail:[],seed:Math.random()});
   }
   s.warmed=true;
 }
-s.clock+=dt*(70+s.low*230);let steps=0;
+s.clock+=dt*105;let steps=0;
 while(s.clock>=1&&steps++<14){
   s.clock--;
-  for(const orbit of s.orbits){advance(orbit,.008);orbit.points.push([orbit.x,orbit.y,orbit.z,s.power]);if(orbit.points.length>1400)orbit.points.shift();}
+  for(const orbit of s.orbits){advance(orbit,.008);orbit.points.push([orbit.x,orbit.y,orbit.z,s.power,s.hue]);if(orbit.points.length>1400)orbit.points.shift();}
 }
 s.active+=((64+s.power*(s.particles.length-64))-s.active)*(1-Math.exp(-dt/.7));
 const active=Math.floor(s.active);
@@ -72,26 +72,27 @@ while(s.particleClock>=1&&iterations++<14){
 const g=s.g,rw=Math.max(64,Math.round(w*(a.renderScale??1))),rh=Math.max(64,Math.round(h*(a.renderScale??1)));if(g.width!==rw||g.height!==rh)g.resizeCanvas(rw,rh);
 g.clear();g.resetMatrix();g.colorMode(p.HSB,360,100,100,255);g.background(225,65,3);
 g.perspective(Math.PI/3,w/h,1,5000);g.camera(0,0,Math.max(95,95*h/w),0,0,0,0,1,0);
-g.rotateY(s.rotation);g.rotateX(-.22+Math.sin(t*.055)*(.12+s.high*.12));g.rotateZ(Math.sin(t*.035)*.055);
-g.scale(1+s.low*.17+s.impact*.08);g.noFill();
+g.rotateY(s.rotation);g.rotateX(-.22);g.noFill();
 for(let k=0;k<s.orbits.length;k++){
   const points=s.orbits[k].points,offset=DUAL?(k?3:-3):0;
   g.strokeWeight(.55);
   for(let j=1;j<points.length;j++){
     const age=j/points.length,a1=points[j-1],a2=points[j];
-    g.stroke((s.hue+k*125+age*40)%360,70,75,Math.pow(age,1.3)*(35+a2[3]*90));
+    g.stroke((a2[4]+k*125+age*40)%360,70,75,Math.pow(age,1.3)*(35+a2[3]*90));
     g.line(a1[0]+offset,a1[1]*.9,-a1[2]+25,a2[0]+offset,a2[1]*.9,-a2[2]+25);
   }
 }
 // Partículas com caudas curtas e brilho limitado; sem nuvem branca no centro.
 for(let j=0;j<active;j++){
   const dot=s.particles[j],offset=DUAL?(dot.orbit?3:-3):0;
-  dot.trail.push([dot.x+offset,dot.y*.9,-dot.z+25]);if(dot.trail.length>6)dot.trail.shift();
   const hue=(s.hue+dot.orbit*125+dot.seed*45)%360;
+  dot.trail.push({position:[dot.x+offset,dot.y*.9,-dot.z+25],hue,power:s.power});
+  if(dot.trail.length>6)dot.trail.shift();
   g.strokeWeight(.6);
   for(let k=1;k<dot.trail.length;k++){
-    g.stroke(hue,75,90,(k/dot.trail.length)*(12+s.power*35));
-    g.line(...dot.trail[k-1],...dot.trail[k]);
+    const sample=dot.trail[k];
+    g.stroke(sample.hue,75,90,(k/dot.trail.length)*(12+sample.power*35));
+    g.line(...dot.trail[k-1].position,...sample.position);
   }
   g.stroke(hue,60,100,100+s.high*60+s.impact*50);
   g.strokeWeight(1.4+dot.seed+s.high*1.8+s.impact*3.2);

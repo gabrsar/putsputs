@@ -6,7 +6,6 @@ precision highp float;
 uniform vec3 iResolution;
 uniform float iTime;
 uniform vec3 iBands;
-mat2 turn(float a){return mat2(cos(a),sin(a),-sin(a),cos(a));}
 float tile(vec2 id){return fract(sin(dot(id,vec2(39.34,73.12)))*43758.5453);}
 float boxDistance(vec3 p,vec3 b){
  vec3 q=abs(p)-b;
@@ -15,9 +14,8 @@ float boxDistance(vec3 p,vec3 b){
 void mainImage(out vec4 color,in vec2 pixel){
  vec2 uv=(2.*pixel-iResolution.xy)/iResolution.y;
  float time=iTime*.6;
- vec3 eye=vec3(.55*sin(time*.2),1.8,time);
+ vec3 eye=vec3(0.,1.8,time);
  vec3 ray=normalize(vec3(uv.x,uv.y-.27,1.35));
- ray.xy=turn(.1*sin(time*.4))*ray.xy;
  vec3 sky=mix(vec3(.16,.07,.09),vec3(.025,.022,.073),clamp(.5+ray.y,0.,1.));
  float t=.03;
  for(int j=0;j<64;j++){

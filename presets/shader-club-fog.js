@@ -43,8 +43,9 @@ void mainImage(out vec4 color,in vec2 pixel){
  float aspect=iResolution.x/iResolution.y;
  vec3 light=vec3(.013,.014,.034)*(.65+mist(p));
  float spread=.34+iBands.x*.35;
- light+=fan(p,vec2(-aspect*.76,-.64),.62+.24*sin(iTime*.81),spread,vec3(.06,1.,.59));
- light+=fan(p,vec2(aspect*.76,-.64),2.52+.26*cos(iTime*.73),spread,vec3(.32,.32,1.));
+ float aim=.11*iBands.x;
+ light+=fan(p,vec2(-aspect*.76,-.64),.62+.24*sin(iTime*.81)+aim,spread,vec3(.06,1.,.59));
+ light+=fan(p,vec2(aspect*.76,-.64),2.52+.26*cos(iTime*.73)-aim,spread,vec3(.32,.32,1.));
  light+=fan(p,vec2(0.,.83),-1.57+.43*sin(iTime*.62),spread*.78,vec3(1.,.10,.41))*.77;
  for(int j=0;j<5;j++){
   float k=float(j);
@@ -53,7 +54,7 @@ void mainImage(out vec4 color,in vec2 pixel){
   vec3 tint=.55+.45*cos(vec3(0.,2.1,4.2)+k*1.8+iTime*.23);
   light+=tint*starOutline(p-center,spin,.072+iBands.y*.051)*( .68+iBands.z*.35);
  }
- color=vec4(1.-exp(-light*(1.24+iBands.x*.65)),1.);
+ color=vec4(1.-exp(-light*1.24),1.);
 }
 out vec4 outputColor;
 void main(){mainImage(outputColor,gl_FragCoord.xy);}

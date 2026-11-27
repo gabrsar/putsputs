@@ -7,8 +7,7 @@ uniform vec3 iResolution;
 uniform float iTime;
 uniform vec3 iBands;
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-vec2 p=(2.*fragCoord-iResolution.xy)/iResolution.y;
-vec2 q=p+vec2(sin(iTime*.7),cos(iTime*.55))*.16;
+vec2 q=(2.*fragCoord-iResolution.xy)/iResolution.y;
 float d=max(.018,max(abs(q.x),abs(q.y))), z=1./d, a=atan(q.y,q.x);
 float tiles=smoothstep(.06,.15,fract(z-iTime*2.))*smoothstep(.02,.07,fract(a*2.546));
 float scan=pow(.5+.5*cos(z*5.-iTime*9.),6.);
