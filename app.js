@@ -115,6 +115,7 @@ $('stop').onclick=()=>{disconnect();message('Áudio parado.')};$('demo').onclick
 $('file').onclick=()=>$('upload').click();$('upload').onchange=async e=>{const f=e.target.files[0];if(!f)return;disconnect();const ticket=generation;try{await init();if(ticket!==generation)return;url=URL.createObjectURL(f);media=new Audio(url);media.loop=false;media.onended=()=>{if(ticket===generation)message('Música encerrada. Abra outro arquivo para continuar.')};source=context.createMediaElementSource(media);source.connect(analyser);source.connect(detailAnalyser);stereoAnalysis.connect(source);source.connect(outputGain);await media.play();if(ticket===generation){mode='live';window.avsPlayer?.fileStarted(f.name);message('')}}catch(err){if(ticket===generation){disconnect();message(err.message)}}e.target.value=''};
 $('fft').onchange=resizeFFT;
 let drawCode,state={},sketch;
+let directWebGL=false;
 const qualityControl=$('render-quality'),libraryDialog=$('library-dialog');
 const touchScreen=matchMedia('(pointer: coarse)');
 let autoScale=1,slowFrameTime=0;
@@ -145,7 +146,7 @@ function disposeCurrentState(){
  if(typeof dispose==='function')try{dispose()}catch(error){console.warn('Preset cleanup:',error.message)}
 }
 
-function apply(){try{const fn=new Function('p','a','s',codeEditor.getValue());if(sketch?.canvas&&drawCode&&window.visualTransition)window.visualTransition.begin(sketch.canvas,{fn:drawCode,state});else disposeCurrentState();drawCode=fn;state={};resetAutoQuality();window.avsInputs?.reset(sketch?.canvas?sketch:null);if(sketch?.canvas){sketch.canvas.setAttribute('aria-label','Animação que reage ao áudio. Clique para usar mouse e teclado.');sketch.background(0);}$('error').textContent='';try{localStorage.setItem('avs-code',codeEditor.getValue())}catch{}return true}catch(e){$('error').textContent=e.message;return false}}
+function apply(){try{const code=codeEditor.getValue(),fn=new Function('p','a','s',code);const direct=code.startsWith('// @putsputs-direct-webgl');if(direct||directWebGL){window.visualTransition?.cancel();disposeCurrentState();}else if(sketch?.canvas&&drawCode&&window.visualTransition)window.visualTransition.begin(sketch.canvas,{fn:drawCode,state});else disposeCurrentState();directWebGL=direct;drawCode=fn;state={};resetAutoQuality();window.avsInputs?.reset(sketch?.canvas?sketch:null);if(sketch?.canvas){sketch.canvas.setAttribute('aria-label','Animação que reage ao áudio. Clique para usar mouse e teclado.');sketch.background(0);}$('error').textContent='';try{localStorage.setItem('avs-code',codeEditor.getValue())}catch{}return true}catch(e){$('error').textContent=e.message;return false}}
 for(const name of Object.keys(presets))$('preset').add(new Option(name,name));
 $('preset').onchange=()=>{codeEditor.setValue(presets[$('preset').value]);apply()};
 try{codeEditor.setValue(localStorage.getItem('avs-code')||Object.values(presets)[0])}catch{codeEditor.setValue(Object.values(presets)[0])}
@@ -254,7 +255,7 @@ else new p5(p=>{
   observeFrameTime(p);setRenderQuality(p);update(p);
   const analysisTime=a.time,analysisDt=a.dt,speed=Number($('visual-speed')?.value)||1;
   visualTime+=analysisDt*speed;a.time=visualTime;a.dt=analysisDt*speed;
-  if(drawCode){try{window.visualTransition.render(p,a,()=>{p.push();try{drawCode(p,a,state)}finally{p.pop();}});}catch(e){$('error').textContent=e.stack||e.message;disposeCurrentState();const previous=window.visualTransition.recover();drawCode=previous?.fn||null;state=previous?.state||{};}}
+  if(drawCode){try{if(directWebGL){a.directWebGL=true;try{drawCode(p,a,state);}finally{a.directWebGL=false;}}else window.visualTransition.render(p,a,()=>{p.push();try{drawCode(p,a,state)}finally{p.pop();}});}catch(e){$('error').textContent=e.stack||e.message;disposeCurrentState();const previous=window.visualTransition.recover();drawCode=previous?.fn||null;state=previous?.state||{};}}
   a.time=analysisTime;a.dt=analysisDt;
  };
 },$('stage'));

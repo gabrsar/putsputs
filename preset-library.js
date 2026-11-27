@@ -27,6 +27,7 @@
     {"name": "Shader · túnel sólido", "path": "presets/shader-tunnel.js", "text": "Shader GLSL em um passe, com reação ao áudio."},
     {"name": "Shader · fogo turbulento", "path": "presets/shader-fire.js", "text": "Shader GLSL em um passe, com reação ao áudio."},
     {"name": "Shader · difração de pista", "path": "presets/shader-laser.js", "text": "Shader GLSL em um passe, com reação ao áudio."},
+    {name:"Shader · laser WebGL direto",path:"presets/shader-laser-direct.js",text:"Mesmo laser, desenhado direto no palco para comparar desempenho."},
     {name:'Laser · estrelas de pista',path:'presets/club-lasers.js',text:'Estrelas e feixes giratórios respondem às bandas do áudio.'},
     {name:'Sismógrafo 3D · órbita',path:'presets/seismograph-orbit.js',text:'Traços contínuos de graves, médios e agudos com câmera em órbita.'},
     {name:'Caleidoscópio · seda',path:'presets/kaleido-silk.js',text:'Seda que transborda a tela, rotação lenta, espessuras variáveis e blur leve.'},
