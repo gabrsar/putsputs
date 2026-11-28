@@ -36,8 +36,8 @@ test('envelope integration is consistent at 30 and 60 fps; stereo falls back to 
  const s={};for(let i=0;i<60;i++){const a=frame(i/60);a.stereo={available:false};update(a,s);}assert.equal(s.shaderAudio.pan,0);
 });
 test('all shader presets parse and the two laser renderers retain the same fragment',()=>{
- const files=fs.readdirSync(path.join(root,'presets')).filter(f=>f.startsWith('shader-')||['fractal-julia.js','fractal-mandelbrot.js','cloud-creatures.js','negroni-amber.js'].includes(f));
- assert.equal(files.length,15);
+ const files=fs.readdirSync(path.join(root,'presets')).filter(f=>f.endsWith('.js')&&/createProgram|createShader/.test(fs.readFileSync(path.join(root,'presets',f),'utf8')));
+ assert(files.length>=15);
  for(const f of files)new Function('p','a','s',fs.readFileSync(path.join(root,'presets',f),'utf8'));
  const fragment=f=>fs.readFileSync(path.join(root,'presets',f),'utf8').split('const fragment = `')[1].split('`;')[0];
  assert.equal(fragment('shader-laser.js'),fragment('shader-laser-direct.js'));

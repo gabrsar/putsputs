@@ -1,6 +1,6 @@
 // @putsputs-direct-webgl
 // @putsputs-blendable
-// Shadertoy-style single Image pass, with audio supplied as iBands (bass, mid, treble).
+// Volumetric combustion: broad coal bed, ten advected depth slices, smoke absorption.
 const fragment = `#version 300 es
 precision highp float;
 uniform vec3 iResolution;
@@ -27,41 +27,69 @@ float fbm(vec2 p){
  return sum;
 }
 
+
+// A broad combustion bed is viewed through ten independently advected slices.
+// Music changes fuel distribution and buoyant releases, never the camera.
 void mainImage(out vec4 color,in vec2 pixel){
  vec2 uv=pixel/iResolution.xy;
- vec2 p=vec2((uv.x-.5)*iResolution.x/iResolution.y,uv.y);
- float time=iMotion,era=iJourney.x;
- float twist=fbm(vec2(p.x*4.,p.y*4.-time*1.7));
- float curl=fbm(vec2(p.x*5.+twist*2.2,p.y*6.-time*2.5));
- float flame=fbm(vec2((p.x+(twist-.5)*p.y*.44)*9.,p.y*6.-time*2.8));
- float fuel=exp(-pow(abs(p.x)*1.75,1.5))*(.52+iBands.x*.5+iAttack.x*.18);
- float heat=clamp((fuel+flame*.69+curl*.24-p.y*(2.1-iBands.y*.3)-.41)*1.72,0.,1.);
- // Backlit smoke folds behind the flame, with slow evolving thermal currents.
- vec2 smokeUV=vec2(p.x*3.+sin(p.y*4.+era)*.3,p.y*4.-time*.37);
- float smoke=fbm(smokeUV+curl*.9);
- vec3 c=vec3(.011,.008,.018)+vec3(.12,.055,.07)*smoke*smoothstep(.15,.75,p.y)*exp(-p.x*p.x*1.4);
- // Attacks release narrow buoyant plumes, advected through the smoke.
+ float aspect=iResolution.x/iResolution.y;
+ vec2 p=vec2((uv.x-.5)*aspect,uv.y);
+ float time=iMotion*.31,era=iJourney.x;
+ float note=spectral(min(11.,floor(uv.x*12.)));
+ // Individual onsets leave rising, narrow thermal currents among the tongues.
+ float release=0.;
  for(int j=0;j<8;j++){
-  vec4 e=iEvents[j];float y=.10+e.x*.15;
-  float x=e.w*.43+sin(p.y*7.-e.x*2.+era)*.055;
-  float plume=exp(-pow((p.x-x)/.038,2.)-pow((p.y-y)/.16,2.))*life(e);
-  c+=vec3(.30,.065,.018)*plume*(1.-heat)*smoke*.65;
+  vec4 e=iEvents[j];
+  float x=e.w*.68+.055*sin(p.y*6.-e.x*1.7+e.w*4.);
+  float y=.08+e.x*.115;
+  release+=exp(-pow((p.x-x)/.075,2.)-pow((p.y-y)/.19,2.))*life(e)*.12;
  }
- float ember=exp(-p.y*10.)*exp(-p.x*p.x*9.)*(.23+twist*.38);
- c+=vec3(.47,.033,.012)*ember;
- c+=vec3(1.24*heat,1.02*pow(heat,2.05),.69*pow(heat,4.6));
- // Three depths of embers: small distant ash, curling sparks, brighter foreground.
+ vec3 light=vec3(.006,.005,.009),transmission=vec3(1.);
+ float totalFlame=0.;
+ for(int layer=0;layer<10;layer++){
+  float z=-.78+float(layer)*.1733;
+  vec2 q=vec2(p.x*(.91+z*.12)+z*.09,p.y+z*.024);
+  float up=time*(.77+z*.065);
+  float large=fbm(vec2(q.x*3.7+z*.8,q.y*3.1-up));
+  float curl=noise(vec2(q.x*12.+large*2.2+z*.7,q.y*9.2-up*1.38));
+  float filament=noise(vec2(q.x*22.+curl*1.5,q.y*15.-up*1.8+z*4.));
+  // No central Gaussian fuel column: a wide coal bed feeds many unequal tongues.
+  float bed=.70+.075*sin(q.x*8.+z*4.2+era*.17)+.06*sin(q.x*19.-z*6.);
+  float sides=exp(-pow(abs(q.x)/max(.65,aspect*.67),6.));
+  float fuel=bed*sides+.09*iBands.x+.045*note+release;
+  float structure=fuel-q.y*(1.30-.07*iBands.y)+(large-.50)*.83+(curl-.5)*.40;
+  float flame=smoothstep(.035,.34,structure)*smoothstep(-.025,.035,q.y);
+  flame*=.32+.68*smoothstep(.23,.78,curl*.68+filament*.32);
+  float heat=clamp(structure*.92+.08*filament,0.,1.);
+  heat*=.55+.60*smoothstep(.28,.8,curl);
+  float fineRim=pow(max(0.,1.-abs(structure-.11)*5.),3.);
+  vec3 fireColor=vec3(1.55,.10+.96*pow(heat,1.55),.012+.33*pow(heat,3.8));
+  fireColor*=.27+heat*.9;
+  fireColor+=vec3(.31,.055,.007)*fineRim*filament;
+  // Cool opaque folds cross in front of brighter layers, providing actual depth.
+  float smoke=smoothstep(.45,.73,large)*smoothstep(.24,.68,q.y)*(1.-flame*.82);
+  float opacity=1.-exp(-(flame*.20+smoke*.067));
+  vec3 material=mix(vec3(.030,.024,.030),fireColor,flame);
+  light+=transmission*material*opacity;
+  transmission*=exp(-vec3(.21,.27,.31)*(flame*.54+smoke*.75));
+  totalFlame+=flame*.1;
+ }
+ // Discontinuous glowing coals spread along the base instead of a white central blob.
+ float coal=noise(vec2(p.x*37.,1.3+sin(era*.3)*.1));
+ float coalBed=exp(-p.y*47.)*smoothstep(.40,.78,coal);
+ light+=vec3(.47,.075,.011)*coalBed*(.45+iBands.x*.35);
+ // Back ash and foreground sparks follow different velocities and focus planes.
  for(int layer=0;layer<3;layer++){
-  float k=float(layer),scale=23.+k*13.;
-  vec2 grid=vec2((p.x+sin(p.y*5.+era+k)*.045)*scale,(p.y-time*(.10+k*.055))*scale*.63);
-  vec2 cell=floor(grid),local=fract(grid)-vec2(hash(cell+k),hash(cell+2.+k));
-  float note=spectral(7.+k*2.);
-  float spark=exp(-dot(local*vec2(1.,.6),local*vec2(1.,.6))*(180.-k*35.));
-  c+=vec3(.8,.22+k*.04,.035)*spark*step(.99-note*.035-iAttack.z*.025,hash(cell+7.))*exp(-p.y*(1.6+k*.35))*(.28+k*.16);
+  float k=float(layer),scale=31.+k*15.;
+  vec2 grid=vec2((p.x+sin(p.y*5.+era*.4+k)*.032)*scale,(p.y-time*(.13+k*.065))*scale*.66);
+  vec2 id=floor(grid),v=fract(grid)-vec2(hash(id+k),hash(id+2.+k));
+  float spark=exp(-dot(v*vec2(1.,.52),v*vec2(1.,.52))*(200.-k*34.));
+  float notes=spectral(7.+k*2.);
+  float sparse=step(.994-notes*.014-iAttack.z*.008,hash(id+7.));
+  light+=vec3(.82,.28+k*.035,.045)*spark*sparse*exp(-p.y*1.7)*(.11+k*.12)*(1.-totalFlame*.65);
  }
- float lace=pow(.5+.5*sin(p.x*67.+curl*9.-time*3.),12.);
- c+=vec3(.32,.10,.02)*lace*heat*(1.-heat)*iBands.y*.22;
- color=vec4(1.-exp(-c*1.6),1.);
+ float veil=1.-.17*smoothstep(.65,1.15,length(vec2((uv.x-.5)*1.2,uv.y-.45)));
+ color=vec4(1.-exp(-light*veil*1.35),1.);
 }
 
 out vec4 outputColor;
@@ -109,7 +137,7 @@ void main(){
   };
 }
 const {canvas, gl, program, resolution, time, bands} = s.surface;
-const scale = Math.min(a.drawFinishedShader ? 1.35 : .65, a.renderScale ?? .65);
+const scale = Math.min(a.drawFinishedShader ? .75 : .55, a.renderScale ?? .65);
 const width = Math.max(1, Math.round(p.width * scale));
 const height = Math.max(1, Math.round(p.height * scale));
 if (canvas.width !== width) canvas.width = width;

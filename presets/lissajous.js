@@ -27,28 +27,55 @@ const present=(g,ttl=.7,bloom=4)=>{
 };
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
-const g=fresh(),R=Math.min(w,h)*.40;
-const waveform=a.waveform||[],count=144;
-s.scope??=new Float32Array(count);
-s.phase=(s.phase??0)+dt*(.24+low*.12);
-const smooth=1-Math.exp(-dt/.34);
+const g=fresh(),count=256;
+const stereo=a.stereo?.available;
+const left=(stereo?a.stereo.left?.waveform:null)||a.waveform||[];
+const right=(stereo?a.stereo.right?.waveform:null)||a.waveform||[];
+if(!s.xy){
+ s.xy={left:new Float32Array(count),right:new Float32Array(count),gain:1,pressure:0,
+  families:Array.from({length:4},(_,i)=>({x:rand(0,TAU)+i*.6,y:rand(0,TAU)-i*.4,body:0}))};
+}
+const xy=s.xy,ease=1-Math.exp(-dt/.19);
+let peak=0;
+// Real stereo gives each axis its own waveform. Mono uses a quadrature delay.
 for(let j=0;j<count;j++){
- let mean=0;
- const at=Math.floor(j/count*waveform.length);
- for(let k=-7;k<=7;k++)mean+=waveform[(at+k+waveform.length)%waveform.length]||0;
- s.scope[j]+=(mean/15-s.scope[j])*smooth;
-}
-s.pressure??=0;s.pressure+=(loud-s.pressure)*smooth;
-g.translate(w*.5,h*.5);g.noFill();g.colorMode(p.HSB,360,100,100,255);
-for(let pass=0;pass<2;pass++){
- g.stroke(176+pass*112,65,100,68+s.pressure*80);g.strokeWeight(pass?1.15:1.8);g.beginShape();
- for(let j=0;j<=count;j++){
-  const theta=j/count*TAU;
-  const detail=s.scope[j%count]*.28;
-  const x=Math.sin(theta*(pass?3:2)+s.phase)+detail;
-  const y=Math.sin(theta*(pass?2:3)-s.phase*.71)+detail*.7;
-  g.vertex(x*R*(.85+pass*.12),y*R*.78);
+ const atL=Math.floor(j/count*left.length),atR=Math.floor(j/count*right.length);
+ let l=0,r=0;
+ for(let k=-3;k<=3;k++){
+  l+=left.length?(left[(atL+k+left.length)%left.length]||0):0;
+  r+=right.length?(right[(atR+k+(stereo?0:Math.floor(right.length*.19))+right.length)%right.length]||0):0;
  }
- g.endShape(p.CLOSE);
+ l/=7;r/=7;peak=Math.max(peak,Math.abs(l),Math.abs(r));
+ xy.left[j]+=(l-xy.left[j])*ease;xy.right[j]+=(r-xy.right[j])*ease;
 }
-present(g,1.15,4);
+const gainTarget=Math.min(3.2,1/Math.max(.32,peak));
+xy.gain+=(gainTarget-xy.gain)*(1-Math.exp(-dt/.7));
+xy.pressure+=(loud-xy.pressure)*ease;
+g.translate(w*.5,h*.5);g.noFill();g.colorMode(p.HSB,360,100,100,255);
+const ratios=[[2,3],[3,2],[4,5],[1,2]],hues=[178,302,36,247];
+// Independent families deform internally: no rigid plate or global rotation.
+for(let family=0;family<4;family++){
+ const f=xy.families[family],nx=ratios[family][0],ny=ratios[family][1];
+ const selected=value(family*Math.max(1,Math.floor(strengths.length/4)));
+ f.body+=(selected-f.body)*(1-Math.exp(-dt/.42));
+ f.x+=dt*(.055+family*.017+low*(.035+family*.012));
+ f.y-=dt*(.041+family*.023+mid*(.027+(3-family)*.011));
+ const broad=family<2?1:.86;
+ const ampX=w*.47*broad,ampY=h*.46*(family===2?.88:1);
+ const alpha=(family<2?74:29)+f.body*(family<2?70:36);
+ for(let ink=0;ink<2;ink++){
+  g.stroke((hues[family]+high*9)%360,ink?45:79,100,ink?alpha*.78:alpha*.26);
+  g.strokeWeight(ink?(family<2?1.15:.72):(family<2?3.4:2.0));g.beginShape();
+  for(let j=0;j<=count;j++){
+   const theta=j/count*TAU,index=j%count;
+   const dx=xy.left[index]*xy.gain,dy=xy.right[index]*xy.gain;
+   const weave=.055+f.body*.055;
+   const x=.88*Math.sin(theta*nx+f.x)+weave*Math.sin(theta*(nx+2)-f.y)+dx*.065;
+   const y=.86*Math.sin(theta*ny+f.y)+weave*Math.sin(theta*(ny+1)+f.x*.73)+dy*.075;
+   g.vertex(x*ampX,y*ampY);
+  }
+  g.endShape(p.CLOSE);
+ }
+}
+// Short phosphor memory keeps crossings readable and removes old footprints.
+present(g,.62+xy.pressure*.24,2.4+high*.7);
