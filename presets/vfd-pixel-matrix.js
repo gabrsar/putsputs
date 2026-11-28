@@ -27,12 +27,25 @@ if(!s.plate||s.plate.width!==w||s.plate.height!==h){
  s.plate?.remove();s.screen?.remove();s.plate=p.createGraphics(w,h);s.screen=p.createGraphics(w,h);
  s.plate.pixelDensity(a.pixelDensity??1);s.screen.pixelDensity(a.pixelDensity??1);
  s.dispose=()=>{s.plate.remove();s.screen.remove();};
- const b=s.plate;b.background(12,7,5);b.noFill();b.stroke(70,112,108,70);b.strokeWeight(1);b.rect(pad*.5,pad*.45,w-pad,h-pad*.9,12);
+ const b=s.plate;b.background(3,2,1);b.noFill();b.stroke(70,112,108,70);b.strokeWeight(1);b.rect(pad*.5,pad*.45,w-pad,h-pad*.9,12);
  b.stroke(105,151,141,22);b.rect(pad*.7,pad*.65,w-pad*1.4,h-pad*1.3,9);
  // Visible inactive phosphor and a real-looking electrode lattice behind the display.
  for(let x=0;x<cols;x++)for(let y=0;y<rows;y++){
-  const xx=left+x*cw,yy=top+y*ch;b.noStroke();b.fill(65,126,110,PIXEL?32:27);
+  const xx=left+x*cw,yy=top+y*ch;b.noStroke();b.fill(PIXEL?91:52,PIXEL?58:105,PIXEL?27:89,PIXEL?17:18);
   b.rect(xx+cw*.14,yy+ch*.17,cw*.72,ch*(PIXEL?.66:.53),Math.min(1.5,cw*.1));
+ }
+ // Fine woven control grid: recessed shadow, metal highlight and welded crossings.
+ b.strokeWeight(.45);
+ const mesh=Math.max(3,Math.min(cw,ch)*.34);
+ for(let x=left;x<=w-left;x+=mesh){
+  b.stroke(0,0,0,180);b.line(x+1,top-7,x+1,top+displayH+7);
+  b.stroke(PIXEL?133:82,PIXEL?91:133,PIXEL?54:120,25);b.line(x,top-7,x,top+displayH+7);
+ }
+ for(let y=top;y<=top+displayH;y+=mesh){
+  b.stroke(105,123,116,19);b.line(left-5,y,w-left+5,y);
+ }
+ for(let bank=0;bank<=8;bank++)for(let k=0;k<=12;k++){
+  b.noStroke();b.fill(134,145,124,45);b.circle(left+bank*displayW/8,top+k*displayH/12,1.3);
  }
  b.strokeWeight(.45);
  for(let x=left;x<=w-left;x+=Math.max(3,cw*.5)){b.stroke(104,155,143,24);b.line(x,top-9,x,top+displayH+9);}
@@ -47,17 +60,18 @@ if(!s.plate||s.plate.width!==w||s.plate.height!==h){
  b.stroke(81,124,116,65);b.strokeWeight(1);for(let k=0;k<28;k++){const x=left+k/27*displayW;b.line(x,h-pad*.6,x,h-pad*.25);}
  b.noStroke();b.fill(126,178,155,95);b.textFont('monospace');b.textSize(Math.max(8,Math.min(11,w*.012)));b.textAlign(p.LEFT,p.TOP);b.text(PIXEL?'DOT MATRIX / 104 × 36':'FLUORESCENT ANALYZER / GRID DRIVE',left,h*.065);
 }
-p.background(9,4,3);p.image(s.plate,0,0,w,h);
-const g=s.screen;g.clear();g.noStroke();s.bars??=Array(cols).fill(0);s.peaks??=Array(cols).fill(0);
+p.background(2,1,1);p.image(s.plate,0,0,w,h);
+const g=s.screen;g.clear();g.noStroke();s.bars??=Array(cols).fill(0);s.peaks??=Array(cols).fill(0);s.hold??=Array(cols).fill(0);
 for(let x=0;x<cols;x++){
  const group=groups[Math.min(groups.length-1,Math.floor(x/cols*groups.length))],target=group?level(group):0;
  s.bars[x]+=(target-s.bars[x])*(1-Math.exp(-dt/(target>s.bars[x]?.025:.22)));
- s.peaks[x]=Math.max(s.bars[x],s.peaks[x]-dt*.19);
+ if(s.bars[x]>=s.peaks[x]){s.peaks[x]=s.bars[x];s.hold[x]=.65;}
+ else {s.hold[x]=Math.max(0,s.hold[x]-dt);if(!s.hold[x])s.peaks[x]=Math.max(s.bars[x],s.peaks[x]-dt*.23);}
  for(let y=0;y<rows;y++){
   if(!s.mode&&x%4===3)continue;
   const row=rows-1-y,height=s.bars[x]*rows;
   let brightness=0;
-  if(!s.mode)brightness=row<height?.35+s.bars[x]*.65:Math.abs(row-s.peaks[x]*rows)<.6?.7:0;
+  if(!s.mode)brightness=row<height?(.32+s.bars[x]*.60)*(1+.025*Math.sin(t*17+x*.7)):0;
   else{
    const center=(.5-wave(x/(cols-1))*.40)*rows;
    const distance=Math.abs(y-center);brightness=Math.exp(-distance*(PIXEL?1.2:1.7))*(.2+energy*.8);
@@ -67,6 +81,19 @@ for(let x=0;x<cols;x++){
   g.fill(220+brightness*35,83+brightness*82,21+brightness*48,brightness*235);
   g.rect(xx+cw*.14,yy+ch*.17,cw*.72,ch*(PIXEL?.66:.53),Math.min(1.5,cw*.1));
   if(!PIXEL){g.fill(255,204,123,brightness*65);g.rect(xx+cw*.16,yy+ch*.17,cw*.68,ch*.12);}
+ }
+}
+// Peak caps have a hot white core and a colored halo, independent of bar fill.
+if(!s.mode){
+ for(let x=0;x<cols;x++){
+  if(s.peaks[x]<.025||(PIXEL&&x%4===3))continue;
+  const xx=left+x*cw,yy=top+(rows-1-Math.min(rows-1,Math.floor(s.peaks[x]*rows)))*ch;
+  g.fill(PIXEL?255:109,PIXEL?153:255,PIXEL?55:211,85);
+  g.rect(xx+cw*.04,yy+ch*.02,cw*.92,ch*.88,1);
+  g.fill(PIXEL?255:205,PIXEL?224:255,PIXEL?153:239,250);
+  g.rect(xx+cw*.10,yy+ch*.15,cw*.80,Math.max(1.4,ch*.24),.7);
+  g.fill(255,255,PIXEL?224:251,225);
+  g.rect(xx+cw*.16,yy+ch*.16,cw*.68,Math.max(.65,ch*.07),.4);
  }
 }
 // Seven-segment phosphor lives above the electrode grid; the pixel version uses a dot font.
@@ -83,6 +110,16 @@ if(!PIXEL){
 g.fill(246,154,79,160);g.textFont('monospace');g.textSize(Math.max(9,Math.min(14,w*.016)));g.textAlign(p.RIGHT,p.TOP);g.text(s.mode?'OSC / TIME DOMAIN':'FFT / PEAK HOLD',w-left,h*.125);
 // Bloom the active phosphor only, keeping the underlying metal matrix sharp.
 const ctx=p.drawingContext;ctx.save();
-try{ctx.filter='blur(5px)';ctx.globalAlpha=.48;p.image(g,0,0,w,h);ctx.filter='none';ctx.globalAlpha=1;p.image(g,0,0,w,h);}finally{ctx.restore();}
-const glass=ctx.createLinearGradient(0,0,w,h);glass.addColorStop(0,'rgba(255,202,153,.075)');glass.addColorStop(.37,'rgba(255,202,153,0)');glass.addColorStop(.39,'rgba(255,202,153,.025)');glass.addColorStop(1,'rgba(255,202,153,0)');ctx.fillStyle=glass;ctx.fillRect(pad*.5,pad*.45,w-pad,h-pad*.9);
+try{
+ const bloom=Math.max(1.5,Math.min(w,h)*.006);
+ ctx.globalCompositeOperation='screen';ctx.filter=`blur(${bloom*2.8}px)`;ctx.globalAlpha=.18+energy*.07;p.image(g,0,0,w,h);
+ ctx.filter=`blur(${bloom}px)`;ctx.globalAlpha=.42;p.image(g,0,0,w,h);
+ ctx.filter='none';ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;p.image(g,0,0,w,h);
+}finally{ctx.restore();}
+// Optical falloff and a restrained glass reflection leave the dark substrate readable.
+ctx.save();
+const vignette=ctx.createRadialGradient(w*.5,h*.48,Math.min(w,h)*.18,w*.5,h*.5,Math.hypot(w,h)*.57);
+vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,0,0,.65)');ctx.fillStyle=vignette;ctx.fillRect(0,0,w,h);
+ctx.restore();
+const glass=ctx.createLinearGradient(0,0,w,h);glass.addColorStop(0,'rgba(255,202,153,.035)');glass.addColorStop(.37,'rgba(255,202,153,0)');glass.addColorStop(.39,'rgba(255,202,153,.012)');glass.addColorStop(1,'rgba(255,202,153,0)');ctx.fillStyle=glass;ctx.fillRect(pad*.5,pad*.45,w-pad,h-pad*.9);
 hint('V / clique: espectro com peak hold ↔ osciloscópio');
