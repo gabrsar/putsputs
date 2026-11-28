@@ -13,7 +13,7 @@ p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
 if(!s.surface){s.surface=p.createGraphics(w,h);s.surface.pixelDensity(Math.max(a.pixelDensity??1,(a.renderScale??1)>.6?Math.min(1.65,Math.sqrt(2000000/(w*h))):1));s.dispose=()=>s.surface.remove();}
 const g=s.surface;if(g.width!==w||g.height!==h)g.resizeCanvas(w,h);
-g.resetMatrix();g.blendMode(p.BLEND);g.colorMode(p.RGB,255);g.background(3,3,12,255*(1-Math.exp(-dt/.48)));
+g.resetMatrix();g.blendMode(p.BLEND);g.colorMode(p.RGB,255);g.background(3,3,12,255*(1-Math.exp(-dt/.48)));window.avsDecayHistory?.(g,dt);
 p.background(3,3,12);
 g.translate(w/2,h/2);g.rotate(t*.035+Math.sin(t*.045)*.12);
 g.colorMode(p.HSB,360,100,100,255);g.blendMode(p.ADD);g.noFill();

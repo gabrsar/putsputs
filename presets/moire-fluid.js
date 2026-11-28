@@ -39,7 +39,7 @@ const tilt=drift('shear',0,-.28,.28,6,17);
 const blur=drift('blur',.3,0,BLUR_MAX,4,11);
 const trail=drift('trail',.09,.035,.20,5,13);
 const bendFrequency=drift('bendFrequency',.19,.11,.29,9,22);
-p.background(3,4,12,255*(1-Math.exp(-dt/trail)));
+p.background(3,4,12,255*(1-Math.exp(-dt/trail)));window.avsDecayHistory?.(p,dt);
 const g=s.layer;
 if(g.width!==w||g.height!==h)g.resizeCanvas(w,h);
 g.clear();g.resetMatrix();g.colorMode(p.HSB,360,100,100,255);

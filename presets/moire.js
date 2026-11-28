@@ -12,7 +12,7 @@ const high=region(4000,22000);
 const w=p.width,h=p.height;
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
-p.background(3,4,12,255*(1-Math.exp(-dt/.07)));
+p.background(3,4,12,255*(1-Math.exp(-dt/.07)));window.avsDecayHistory?.(p,dt);
 p.translate(w/2,h/2);p.noFill();p.blendMode(p.ADD);
 const extent=Math.hypot(w,h)*.55,spacing=12+low*8;
 for(let mesh=0;mesh<2;mesh++){

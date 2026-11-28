@@ -12,7 +12,7 @@ const valueAt=i=>strengths[((i%strengths.length)+strengths.length)%strengths.len
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
 
-p.background(2,3,12,255*(1-Math.exp(-dt/.28)));
+p.background(2,3,12,255*(1-Math.exp(-dt/.28)));window.avsDecayHistory?.(p,dt);
 p.colorMode(p.HSB,360,100,100,255);p.noStroke();
 const rows=48,cols=54,R=Math.min(w,h);
 const turn=Math.sin(t*.045)*.15;

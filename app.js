@@ -256,7 +256,12 @@ if(live){
   a.groups=groupEngine.update(a.spectrum,a.binHz,a.dt,a.time,mode==='demo'?demoMagnitude:null);
 }
 a.showHUD=document.body.dataset.mode==='studio';
-a.stereo=live?stereoAnalysis.read(gain):remote?.stereo||{available:false};a.features=groupEngine.features();a.music=window.avsMusic?.update(a);window.avsInputs?.update(p,a);
+a.stereo=live?stereoAnalysis.read(gain):remote?.stereo||{available:false};a.features=groupEngine.features();a.music=window.avsMusic?.update(a);
+// Sample the musical palette at 5 Hz; CSS blends the color between samples.
+if(a.music&&a.time>=(update.nextUIColor||0)){update.nextUIColor=a.time+.2;
+let lightHue=a.music.hue;if(!Number.isFinite(lightHue)){let weight=0,center=0;for(let i=0;i<a.spectrum.length;i++){const v=Number.isFinite(a.spectrum[i])?Math.max(0,a.spectrum[i]):0;weight+=v;center+=v*i;}lightHue=weight>0?160+center/weight/a.spectrum.length*280:180;}
+document.documentElement.style.setProperty('--music-light',`hsl(${lightHue.toFixed(1)} 78% 72%)`);document.documentElement.style.setProperty('--music-light-secondary',`hsl(${((lightHue+65)%360).toFixed(1)} 70% 68%)`);}
+window.avsInputs?.update(p,a);
 if(!a.showHUD||libraryDialog?.open||a.time-lastScopePaint<1/30)return;lastScopePaint=a.time;
 const c=$('scope'),g=c.getContext('2d'),ratio=Math.min(2,window.devicePixelRatio||1);
 const w=Math.round(c.clientWidth*ratio),h=Math.round(120*ratio);

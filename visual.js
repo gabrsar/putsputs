@@ -164,7 +164,7 @@ for(const cell of cells){
 gl.depthMask(true);
 // Composição mantém o rastro curto e o texto da interface nítido.
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
-p.background(2,3,10,255*(1-Math.exp(-dt/TRAIL)));
+p.background(2,3,10,255*(1-Math.exp(-dt/TRAIL)));window.avsDecayHistory?.(p,dt);
 p.imageMode(p.CORNER);p.image(g,0,0,p.width,p.height);
 p.noStroke();p.textAlign(p.LEFT,p.TOP);p.textSize(10);p.fill(150,170,195,200);
 if(a.showHUD)p.text('AGORA: FILEIRA CLARA · ARRASTE: ÓRBITA · SCROLL: ZOOM · SETAS: DIREÇÃO · SHIFT: PAN · R: RESET',12,10);

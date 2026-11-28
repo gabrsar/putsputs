@@ -15,8 +15,6 @@
     {"name": "Bordado · picos de linha", "path": "presets/embroidery-bloom.js", "text": "A agulha costura os picos da música em fileiras de tecido, com cor por frequência, tensão e fio solto. Clique começa outro pano."},
     {"name": "VFD · observatório de fósforo", "path": "presets/vfd-observatory.js", "text": "Vidro, grades de eletrodos, fósforo apagado, filamentos, contatos e trilhas. Barras com peak hold e modo waveform. Clique alterna."},
     {"name": "VFD · matriz de pixels", "path": "presets/vfd-pixel-matrix.js", "text": "Display fluorescente laranja de 104 × 36 pontos, relógio em dot matrix, grade física e persistência luminosa. Clique alterna espectro/waveform."},
-    {"name": "Polarizer · tensões de luz", "path": "presets/polarizer-film.js", "text": "Filmes birrefringentes simulados em baixa resolução; mouse gira o analisador; clique muda as camadas."},
-    {"name": "Tinta · sprays e gotas", "path": "presets/painting-drying.js", "text": "Vozes viram sprays finos, graves depositam gotas grossas e a amplitude escolhe a carga de tinta. Pigmentos secam nas bordas."},
     {"name": "Sound Waves · matéria em interferência", "path": "presets/sound-wave-field.js", "text": "Campo de ondas de duas fontes; waveform real move a malha; clique posiciona uma fonte; W alterna linhas e pontos."},
     {name:'Aurora · cortinas espectrais',path:'presets/aurora.js',text:'Faixas de ruído Perlin que respiram com as frequências.'},
     {"name": "Lissajous · néon XY", "path": "presets/lissajous.js", "text": "Curvas XY lentas com memória de fósforo e detalhes suaves do waveform."},
@@ -32,6 +30,8 @@
     {name:"Shader · Deriva estelar",path:"presets/shader-nebula-drift.js",text:"Voo por uma nebulosa fractal volumétrica com filamentos de luz."},
     {name:"Shader · Ruínas em trânsito",path:"presets/shader-ruin-flight.js",text:"Voo sobre uma cidade alienígena com luzes acionadas pelo espectro."},
     {name:"Shader · Laser na fumaça",path:"presets/shader-club-fog.js",text:"Três projetores RGB cruzam feixes na fumaça. Graves abrem os leques e os médios e agudos animam as estrelas."},
+    {name:'Shader · Corredor de luz',path:'presets/shader-luminous-corridor.js',text:'Barras luminosas em um corredor curvo profundo; doze regiões do espectro e ecos musicais. Base: Jan Mróz (jaszunio15), CC BY 3.0; adaptação putsputs.'},
+    {name:'Shader · Dobra estelar',path:'presets/shader-warp-stars.js',text:'Estrelas e rastros em velocidade de dobra; câmera estável, brilhos por frequência e ondas discretas no espaço.'},
     {name:'Laser · estrelas de pista',path:'presets/club-lasers.js',text:'Estrelas e feixes giratórios respondem às bandas do áudio.'},
     {name:'Sismógrafo 3D · órbita',path:'presets/seismograph-orbit.js',text:'Doze pontas de grafite virtual desenham curvas em paralelo, unidas em um volume visto em perspectiva.'},
     {name:'Caleidoscópio · seda',path:'presets/kaleido-silk.js',text:'Seda espelhada com rotação lenta e rastros luminosos.'},
@@ -55,7 +55,7 @@
     {"name": "Psicodélico · plasma líquido", "path": "presets/psychedelic-liquid.js", "text": "Rios cromáticos com memória desfocada, dobras Perlin, glow e centelhas que entram em certas frases."},
     {"name": "Micélio · raízes por frequência", "path": "presets/organic-mycelium.js", "text": "Cada faixa tem sua raiz e cor. A energia faz crescer, picos bifurcam e mudanças de timbre desviam os ramos."},
     {name:'Lounge · veludo e vinho',path:'presets/wine-velvet.js',text:'Fitas rubi e ameixa, um fio dourado e movimento discreto.'},
-    {"name": "Negroni · líquido em órbita", "path": "presets/negroni-amber.js", "text": "O copo balança, o líquido gira e as ondas batem nas paredes; âmbar, cobre e reflexos de gelo."},
+    {name:'Lounge · âmbar e negroni',path:'presets/negroni-amber.js',text:'Arcos de vidro âmbar e cobre crescem lentamente além da tela; a música move as ondas, a névoa e os reflexos ao fundo.'},
     {name:'Tapeçaria · espectrograma',path:'presets/spectral-weave.js',text:'Doze segundos em células de cor: frequência × tempo, com ataques destacados.'}
   ];
   const group=document.createElement('optgroup');group.label='Biblioteca · editáveis no WebStorm';

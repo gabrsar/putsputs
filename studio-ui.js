@@ -29,6 +29,23 @@
  document.addEventListener('pointerdown',e=>{if(!$('source-panel').hidden&&!e.target.closest('#source-panel,#source-toggle,#track-picker'))sourcePanel(false);});
  $('examples-tab').onclick=()=>$('example-track').focus();
  $('library-toggle').onclick=()=>{$('library-dialog').showModal();};
+ const visualName=$('visual-title');
+ visualName.removeAttribute('aria-haspopup');visualName.removeAttribute('aria-controls');
+ visualName.title='Selecionar e copiar nome do visual';
+ visualName.onclick=async()=>{
+  visualName.focus();
+  const range=document.createRange();range.selectNodeContents(visualName);
+  const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+  try{await navigator.clipboard.writeText(visualName.textContent);$('name-copy-status').textContent='Nome copiado';}
+  catch{$('name-copy-status').textContent='Nome selecionado para copiar';}
+ };
+ document.addEventListener('pointerdown',event=>{
+  if(event.target.closest('#visual-title'))return;
+  if(document.activeElement===visualName)visualName.blur();
+  const selection=window.getSelection();
+  if(selection?.anchorNode&&visualName.contains(selection.anchorNode))selection.removeAllRanges();
+  $('name-copy-status').textContent='';
+ },true);
  $('library-close').onclick=()=>$('library-dialog').close();
  $('library-dialog').addEventListener('click',event=>{if(event.target===$('library-dialog')){const r=event.target.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)event.target.close();}});
  $('deck-prev').onclick=()=>$('preset-prev').click();$('deck-next').onclick=()=>$('preset-next').click();
@@ -91,31 +108,12 @@
  let fps=60;setInterval(()=>{fps+=(Math.max(0,a.fps||0)-fps)*.25;$('fps-pill').textContent=Math.round(fps)+' FPS'+(Number.isFinite(a.renderFrameMs)?' · CPU '+a.renderFrameMs.toFixed(2)+' ms':'')+(Number.isFinite(a.gpuFrameMs)?' · GPU '+a.gpuFrameMs.toFixed(2)+' ms':'');$('visual-error').hidden=!$('error').textContent.trim();},400);
  let initial='discover';try{initial=localStorage.getItem('avs-palco-mode')||'discover';}catch{}
  setMode(initial);renderLibrary();updateSelected();
- const sharedParams=new URLSearchParams(location.search);
- const bundled=new Map(window.presetLibrary.entries().filter(entry=>entry.value.startsWith('file:')).map(entry=>[entry.value.replace(/^file:presets\//,'').replace(/\.js$/,''),entry.value]));
- const sharedPreset=bundled.get(sharedParams.get('preset'));
+ const sharedPreset=window.PresetLinks.initialPreset;
  if(sharedPreset?.startsWith('file:presets/shader-'))$('fps-pill').classList.remove('studio-only');
- const settings=['visual-speed','visual-brightness','render-quality','preset-seed'];
  if(sharedPreset){
-  for(const id of settings){
-   const value=sharedParams.get(id);
-   if(value!==null&&value.length<=80){const field=$(id);const previous=field.value;field.value=value;if(!field.value)field.value=previous;}
-  }
-  $('visual-speed').oninput();
-  $('visual-brightness').oninput();
+  window.PresetLinks.restoreSettings();
+  $('visual-speed').oninput();$('visual-brightness').oninput();
  }
- $('share-visual').onclick=async()=>{
-  const key=[...bundled].find(([,value])=>value===$('preset').value)?.[0];
-  if(!key){window.prompt('Escolha um visual integrado para compartilhar.');return;}
-  const url=new URL(location.pathname,location.origin);
-  url.searchParams.set('preset',key);
-  const renderer=sharedParams.get('renderer');
-  if(renderer==='canvas'&&key.startsWith('shader-')||renderer==='webgl'&&codeEditor.getValue().startsWith('// @putsputs-canvas-webgl'))url.searchParams.set('renderer',renderer);
-  for(const id of settings)url.searchParams.set(id,$(id).value);
-  try{await navigator.clipboard.writeText(url.href);$('share-visual').textContent='Link copiado';}
-  catch{window.prompt('Copie o link do visual:',url.href);}
- };
- $('library-dialog').addEventListener('close',()=>{$('share-visual').textContent='Compartilhar';});
  let remembered='file:presets/moire-fluid.js';
  try{const saved=localStorage.getItem('avs-last-preset');if(saved&&window.presetLibrary.entries().some(e=>e.value===saved))remembered=saved;}catch{}
  window.presetLibrary.load(sharedPreset||remembered);

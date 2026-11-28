@@ -23,7 +23,7 @@ if(s.bandCount!==bands.length){s.rows=[];s.bandCount=bands.length;}
 s.rows ||= [];s.sample ??= -10;
 if(t-s.sample>=1/8){s.rows.push({born:t,values:[...strengths]});s.sample=t;}
 s.rows=s.rows.filter(row=>t-row.born<24);
-p.background(2,4,13,255*(1-Math.exp(-dt/.085)));
+p.background(2,4,13,255*(1-Math.exp(-dt/.085)));window.avsDecayHistory?.(p,dt);
 p.translate(w*(.5+Math.sin(t*.27)*low*.055),h*(.5+Math.cos(t*.21)*high*.045));p.rotate(t*.035+Math.sin(t*.17)*low*.12);
 p.colorMode(p.HSB,360,100,100,255);p.noStroke();
 const R=Math.hypot(w,h)*.58,TAU=Math.PI*2,segments=96;

@@ -26,7 +26,8 @@
    vec3 farGlow=vec3(0.);
    for(int j=0;j<8;j++){
      float angle=float(j)*.78539816;
-     vec2 offset=vec2(cos(angle),sin(angle))*pixel*5.;
+     float radius=max(1.,float(min(textureSize(scene,0).x,textureSize(scene,0).y))*.0065);
+     vec2 offset=vec2(cos(angle),sin(angle))*pixel*radius;
      farGlow+=highlight(texture(scene,uv+offset).rgb);
    }
    vec3 glow=nearGlow+farGlow*.07;

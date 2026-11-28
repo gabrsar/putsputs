@@ -33,7 +33,7 @@ if(paintDt>0){
  s.energy??=Array(11).fill(0);
 
  g.blendMode(p.BLEND);g.colorMode(p.RGB,255);
- g.background(14,4,12,255*(1-Math.exp(-paintDt/.20)));
+ g.background(14,4,12,255*(1-Math.exp(-paintDt/.20)));window.avsDecayHistory?.(g,paintDt);
  g.resetMatrix();g.scale(rw/w,rh/h);g.noFill();
  for(let layer=0;layer<11;layer++){
   const target=strengths[Math.floor(layer/11*strengths.length)]||0;

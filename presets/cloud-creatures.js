@@ -6,6 +6,16 @@ precision highp float;
 uniform vec3 iResolution;
 uniform float iTime;
 uniform vec3 iBands;
+uniform vec3 iAttack;
+uniform vec4 iPhrase; // energy, spectral center, stereo pan, trend
+uniform float iMotion;
+uniform vec4 iEvents[8]; // age, strength, region, spatial seed
+uniform vec4 iSpectrum[3];
+uniform vec4 iJourney; // accumulated musical evolution, activity, elapsed, energy
+float spectral(float n){int i=int(clamp(n,0.,11.));return iSpectrum[i/4][i%4];}
+mat2 turn(float a){return mat2(cos(a),sin(a),-sin(a),cos(a));}
+float life(vec4 e){return e.y*smoothstep(0.,.07,e.x)*exp(-e.x*.75);}
+
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float noise(vec2 p){
  vec2 i=floor(p),f=fract(p);
@@ -18,25 +28,45 @@ float cloudNoise(vec2 p){
  return n;
 }
 uniform vec3 iDrift;
+
 void mainImage(out vec4 color,in vec2 pixel){
- vec2 uv=pixel/iResolution.xy;
- vec3 sky=mix(vec3(.72,.78,.86),vec3(.12,.35,.62),smoothstep(.0,1.,uv.y));
- float sun=exp(-length(uv-vec2(.74,.72))*3.6);
+ vec2 uv=pixel/iResolution.xy;float era=iJourney.x;
+ float dusk=.5+.5*sin(era*.31-.8);
+ vec3 sky=mix(mix(vec3(.62,.73,.84),vec3(.28,.21,.36),dusk*.65),mix(vec3(.10,.31,.58),vec3(.045,.10,.25),dusk*.6),uv.y);
+ float sun=exp(-length(uv-vec2(.74+.025*sin(era*.37),.72))*3.6);
  sky+=vec3(.19,.12,.05)*sun;
- for(int layer=0;layer<3;layer++){
+ // Far cirrus sheets retain fine structure behind the large moving cloud banks.
+ float cirrus=pow(cloudNoise(vec2(uv.x*9.-iMotion*.025,uv.y*17.+era*.07)),3.);
+ sky+=vec3(.17,.13,.16)*cirrus*smoothstep(.35,.85,uv.y)*(.4+spectral(9.));
+ for(int layer=0;layer<4;layer++){
   float k=float(layer),scale=2.7+k*1.5;
   vec2 p=vec2(uv.x*iResolution.x/iResolution.y,uv.y*(1.05+k*.34))*scale;
-  p+=vec2(-iDrift[layer],k*43.+iTime*(.039+k*.012));
-  float density=cloudNoise(p);
-  float high=iBands[layer];
-  float height=sin(iTime*(.09+k*.05)+uv.x*3.2+k)*(.045+high*.09);
-  float envelope=exp(-pow((uv.y-.38-k*.14-height)/( .26+high*.09),2.));
-  float opacity=smoothstep(.41,.70,density)*envelope*(.58+k*.14);
-  vec3 cloud=mix(vec3(.39,.48,.61),vec3(1.,.93,.82),smoothstep(.45,.73,density+uv.y*.11));
-  sky=mix(sky,cloud,opacity);
+  float drift=layer<3?iDrift[min(layer,2)]:iDrift[2]*.7;
+  p+=vec2(-drift+iPhrase.z*(.12+k*.09),k*43.+iMotion*(.039+k*.012));
+  float density=cloudNoise(p),note=spectral(1.+k*3.);
+  float height=sin(iMotion*(.09+k*.05)+uv.x*3.2+k)*(.045+note*.09);
+  float envelope=exp(-pow((uv.y-.35-k*.115-height)/(.20+note*.08+iPhrase.x*.05),2.));
+  float opacity=smoothstep(.41,.70,density)*envelope*(.45+k*.12);
+  float rim=smoothstep(.40,.49,density)*(1.-smoothstep(.49,.58,density));
+  vec3 cloud=mix(vec3(.30,.40,.55),vec3(1.,.90,.76),smoothstep(.45,.73,density+uv.y*.11));
+  cloud=mix(cloud,cloud*vec3(.85,.72,.95),dusk*.35);
+  float resonance=0.;
+  for(int j=0;j<8;j++){
+   vec4 e=iEvents[j];float shaft=exp(-pow((uv.x-.5-e.w*.38)/.065,2.));
+   float silver=pow(.5+.5*cos(density*38.+e.w*4.),12.);
+   resonance+=shaft*silver*life(e)/(1.+k*.7);
+  }
+  // Soft internal illumination, partially hidden by each nearer opaque cloud.
+  cloud+=vec3(.16,.20,.30)*resonance*(.25+density*.5);
+  cloud+=vec3(.12,.09,.055)*rim*(.1+note*.3);
+  sky=mix(sky,cloud,clamp(opacity,0.,.92));
  }
- color=vec4(sky,1.);
+ // Shafts live in clear gaps and shift slowly as the musical atmosphere changes.
+ float shafts=pow(.5+.5*sin((uv.x-.74)/(max(.12,.96-uv.y))*15.+era*.31),18.);
+ sky+=vec3(.10,.075,.04)*shafts*sun*(.08+iBands.y*.14);
+ color=vec4(clamp(sky,0.,1.),1.);
 }
+
 out vec4 outputColor;
 void main(){mainImage(outputColor,gl_FragCoord.xy);}
 `;
@@ -93,7 +123,8 @@ gl.useProgram(program);
 gl.uniform3f(resolution, width, height, 1);
 gl.uniform1f(time, a.time || 0);
 const dt=Math.min(.06,a.dt??1/60);
-const energy=[a.bass||0,a.mid||0,a.treble||0];
+const audio=window.avsShaderUniforms(a,s,s.surface);
+const energy=audio.body;
 for(let i=0;i<3;i++){
  wind[i]+=(energy[i]-wind[i])*(1-Math.exp(-dt/.7));
  offsets[i]+=dt*(.075+i*.041+wind[i]*.58);

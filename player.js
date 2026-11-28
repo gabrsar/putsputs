@@ -5,15 +5,12 @@
   const picker = $('example-track');
   const stageMute = $('unmute-stage');
   const mute = $('music-mute');
-  const play = $('music-play');
-  const seekBar = $('music-seek');
-  const volumeBar = $('music-volume');
   const previous = $('music-prev');
   const next = $('music-next');
   const text = (source) => window.PutsI18n?.t(source) ?? source;
   let preview, previewLoad, clock = performance.now(), position = 0;
   let paused = false, muted = true, visualPaused = false, starting = false;
-  let volume = Number(volumeBar.value), lastVolume = volume, kind = 'none', trackKey, fileName = '';
+  let volume = .4, lastVolume = volume, kind = 'none', trackKey, fileName = '';
 
   if (initialKey) {
     picker.replaceChildren(...trackKeys.map(key => new Option(tracks[key].name, key)));
@@ -64,8 +61,6 @@
     const sample = Boolean(trackKey);
     const track = tracks[trackKey];
     const canUnmute = !external && hasLocalMusic() && isMuted() && !starting;
-    const playbackTime = time();
-    const end = duration();
     const isPaused = pausedNow();
 
     document.body.dataset.externalAudio = String(external);
@@ -85,18 +80,11 @@
         : external ? text('♫ Áudio de aba ou do computador') : text('♫ Escolher áudio'));
 
     mute.disabled = external || !hasLocalMusic() || starting;
-    volumeBar.disabled = external;
-    play.disabled = starting;
+
+
     if (previous) previous.disabled = external || kind === 'file' || trackKeys.length < 2;
     if (next) next.disabled = external || kind === 'file' || trackKeys.length < 2;
     setButton(mute, isMuted() ? 'mute' : 'sound', isMuted() ? text('Ligar som') : text('Silenciar'));
-    setButton(play, isPaused ? 'play' : 'pause', external || !hasLocalMusic()
-      ? (isPaused ? text('Retomar animação') : text('Pausar animação'))
-      : (isPaused ? text('Retomar música') : text('Pausar música')));
-    seekBar.disabled = !end || starting;
-    seekBar.max = String(end || 1);
-    if (document.activeElement !== seekBar) seekBar.value = String(playbackTime);
-    setText('music-time', `${Math.floor(playbackTime / 60)}:${String(Math.floor(playbackTime % 60)).padStart(2, '0')}`);
     setText('playback-status', starting || previewLoad ? text('Carregando…')
       : isPaused ? text('Pausado')
         : external ? text('Ao vivo')
@@ -172,6 +160,10 @@
     disconnect();
     const ticket = generation;
     kind = 'preview';
+    visualPaused = false;
+    paused = false;
+    position = seek;
+    clock = performance.now();
     trackKey = initialKey;
     picker.value = initialKey;
     muted = true;
@@ -204,7 +196,7 @@
     const fromStage = document.activeElement === stageMute;
     if (volume === 0) {
       volume = lastVolume || .4;
-      volumeBar.value = String(volume);
+
     }
     if (kind === 'preview') {
       await liveExample(trackKey, time());
@@ -268,7 +260,7 @@
   picker.onchange = () => liveExample(picker.value);
   if (previous) previous.onclick = () => step(-1);
   if (next) next.onclick = () => step(1);
-  play.onclick = toggle;
+
   mute.onclick = () => {
     if (isMuted()) {
       unmute();
@@ -292,25 +284,6 @@
     if (tapped) unmute();
   });
   stage.addEventListener('pointercancel', () => { pointer = null; });
-  volumeBar.oninput = () => {
-    volume = Number(volumeBar.value);
-    if (volume > 0) lastVolume = volume;
-    if (muted && volume > 0) unmute();
-    gain();
-    updateUI();
-  };
-  seekBar.oninput = () => {
-    const value = Number(seekBar.value);
-    if (kind === 'preview') {
-      position = value;
-      clock = performance.now();
-    } else if (media && Number.isFinite(media.duration)) {
-      media.currentTime = value;
-    }
-    window.avsMusic?.reset();
-    groupEngine.reset();
-  };
-
   window.avsPlayer = {
     onDisconnect, toggle, unmute, startPreview,
     selectExample: liveExample,

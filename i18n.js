@@ -234,6 +234,13 @@ Aba do navegador|Browser tab|浏览器标签页|ब्राउज़र टै�
 Tela inteira|Entire screen|整个屏幕|पूरी स्क्रीन|Pantalla entera|الشاشة بأكملها
 Sua música tocando|Your music playing|正在播放你的音乐|आपका संगीत चल रहा है|Tu música sonando|موسيقاك قيد التشغيل
 Compartilhar|Share|共享|साझा करें|Compartir|مشاركة
+Compartilhar visual|Share visual|分享视觉效果|दृश्य साझा करें|Compartir visual|مشاركة المشهد
+Selecionar e copiar nome do visual|Select and copy the visual name|选择并复制视觉效果名称|दृश्य का नाम चुनें और कॉपी करें|Seleccionar y copiar el nombre del visual|تحديد اسم المشهد ونسخه
+Nome copiado|Name copied|名称已复制|नाम कॉपी किया गया|Nombre copiado|تم نسخ الاسم
+Nome selecionado para copiar|Name selected for copying|已选中名称以便复制|कॉपी करने के लिए नाम चुना गया|Nombre seleccionado para copiar|تم تحديد الاسم للنسخ
+Link copiado|Link copied|链接已复制|लिंक कॉपी किया गया|Enlace copiado|تم نسخ الرابط
+Copie o link do visual:|Copy the visual link:|复制视觉效果链接：|दृश्य का लिंक कॉपी करें:|Copia el enlace del visual:|انسخ رابط المشهد:
+Escolha um visual integrado para compartilhar.|Choose a built-in visual to share.|选择一个内置视觉效果进行分享。|साझा करने के लिए कोई अंतर्निहित दृश्य चुनें।|Elige un visual integrado para compartir.|اختر مشهدًا مدمجًا لمشاركته.
 Escolha a fonte.|Choose a source.|选择来源。|स्रोत चुनें।|Elige la fuente.|اختر المصدر.
 Uma aba com música costuma ser a opção mais simples. Para som do PC, escolha a tela inteira quando o navegador oferecer áudio.|A tab playing music is usually easiest. For computer audio, choose the entire screen if your browser offers audio sharing.|播放音乐的标签页通常是最简单的选择。要共享电脑声音，请在浏览器支持共享音频时选择整个屏幕。|संगीत चलाने वाला टैब आम तौर पर सबसे आसान विकल्प है। कंप्यूटर की आवाज़ के लिए, अगर ब्राउज़र ऑडियो साझा करने देता है तो पूरी स्क्रीन चुनें।|Una pestaña con música suele ser la opción más sencilla. Para el sonido del ordenador, elige la pantalla entera si el navegador permite compartir audio.|غالبًا ما يكون اختيار علامة تبويب تشغّل الموسيقى هو الأبسط. لمشاركة صوت الجهاز اختر الشاشة بأكملها إذا أتاح المتصفح مشاركة الصوت.
 Marque “Compartilhar áudio”.|Check “Share audio”.|勾选“共享音频”。|“ऑडियो साझा करें” चुनें।|Marca «Compartir audio».|فعّل «مشاركة الصوت».
@@ -704,7 +711,11 @@ NONE|NONE|无音频|ऑडियो नहीं|SIN AUDIO|لا يوجد صوت
       languageSelect.add(option);
     }
     languageSelect.addEventListener('change', () => setLanguage(languageSelect.value));
-    header.insertBefore(languageSelect, header.querySelector('#theme-toggle'));
+    const languageControl = document.createElement('label');
+    languageControl.className = 'language-control';
+    languageControl.innerHTML = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6h14M5 18h14"/></svg>';
+    languageControl.append(languageSelect);
+    header.insertBefore(languageControl, header.querySelector('#theme-toggle'));
     updateSelector();
     return languageSelect;
   }

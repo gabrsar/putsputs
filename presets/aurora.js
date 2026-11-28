@@ -12,7 +12,7 @@ const high=region(4000,22000);
 const w=p.width,h=p.height;
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
-p.background(2,5,14,255*(1-Math.exp(-dt/.13)));
+p.background(2,5,14,255*(1-Math.exp(-dt/.13)));window.avsDecayHistory?.(p,dt);
 p.blendMode(p.ADD);p.noFill();
 for(let k=0;k<16;k++){
   const index=Math.min(bands.length-1,Math.floor(k/16*bands.length));

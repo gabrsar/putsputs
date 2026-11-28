@@ -35,6 +35,13 @@ Microphone and local audio-file playback are also available. Demo is synthetic v
 
 ## Privacy and local presets
 
+The current built-in visual and its seed, speed, brightness and quality stay in
+the URL, including after automatic transitions. Shared links open that visual
+with the sequence held. Share from the stage or library: supported browsers use
+the native share sheet, with clipboard and selectable-link fallbacks. Local
+presets and edited code are not embedded or executed from URLs; export those
+through the existing preset tools.
+
 The integrated presets do not record or upload audio. Editor code, saved presets,
 selection settings and seeds stay in browser storage. No analytics are added.
 Custom JavaScript executes the code the user loads. The third-party p5.js/Ace libraries use CDNs; fonts are self-hosted.
@@ -63,6 +70,58 @@ Preset errors stop that visual and show a recoverable message; audio remains con
 The main history uses fixed time coordinates; performance culls only its faded oldest tail.
 
 ## Validation
+
+Shader presets share `avsShaderAudio(a,s)` from `music-window.js`. It keeps
+per-renderer band envelopes (45 ms attack / 320 ms release), transient tails,
+a slow phrase envelope, timbral center, stereo pan and an integrated motion clock.
+Disabled bands fade out; band sensitivity follows `groups.level`. These are
+frequency-region heuristics, not instrument separation or beat/BPM detection.
+Direct WebGL shaders receive `iBands`, `iAttack`, `iPhrase` (energy, center,
+pan, trend) and `iMotion` through `avsShaderUniforms`. Julia and Mandelbrot use
+the same envelopes with bounded camera motion. The tunnel stores the present
+at history index zero and moves older events toward the vanishing point.
+
+The shader signal also carries twelve log-spaced frequency regions and eight
+bounded spatial events (age, intensity, broad region and stereo-influenced
+position). Events expire after eight seconds and have per-region cooldowns;
+each preset interprets them in its own materials rather than overlaying a
+shared pulse shape. Flames advect buoyant plumes, laser diffraction scans dot
+orders, nebula filaments ionize, fractals highlight their orbit traps, city
+antennas signal, and individual stars develop spectral wakes.
+Accumulated energy and transient activity drive a continuous minute-scale
+journey. Each preset interprets this separately: open volumetric octogram
+frames, fractal orbit-trap filigree, smoke and embers at different depths,
+nebular transmittance, diffraction ghosts, laser galleries and city fog.
+
+The solid shader corridor has no finite depth cap; high-frequency distant ribs
+fade at subpixel scale. The octogram near volume continues into analytic distant
+frames. Prism and Hyperdrive converge below pixel scale with darker distant
+walls, instead of showing a large terminal opening.
+
+Negroni preserves the original amber rectangle composition in WebGL2. New
+beveled glass rails grow from the center on a slow clock independent of audio;
+twelve additional near layers keep them alive until they leave the viewport.
+Music excites damped motion, ripples and illumination in the background only.
+
+Exponential Canvas2D feedback also uses `avsDecayHistory` before fresh marks.
+It removes the 8-bit rounding floor at a fixed 60 Hz cadence so old dark marks
+actually disappear. Permanent drawing surfaces are excluded. Clicking a visual
+name selects and copies it; the UI remains visible while it is focused or
+selected. The idle dissolve lasts four seconds, with reduced-motion support.
+
+`shader-luminous-corridor.js` adapts the repeated-box corridor excerpt supplied
+by the user, authored by Jan Mróz (jaszunio15), under
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Changes include
+column-stable periodic boxes, reduced neighbor searches, a stable camera,
+twelve audio regions and spatial musical echoes. Attribution also appears in
+the editable preset and its library description. `shader-warp-stars.js` is an
+original cinematic warp starfield, with no Star Trek artwork or source assets.
+
+Run the shader signal regression checks with:
+
+```sh
+node --test --test-isolation=none tests/shader-audio.test.cjs
+```
 
 ```sh
 node --test tests/avs-lab.test.mjs tests/factor-math.test.mjs tests/trig-math.test.mjs

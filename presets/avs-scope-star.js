@@ -12,7 +12,7 @@ const valueAt=i=>strengths[((i%strengths.length)+strengths.length)%strengths.len
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);
 
 
-p.background(3,3,12,255*(1-Math.exp(-dt/.10)));
+p.background(3,3,12,255*(1-Math.exp(-dt/.10)));window.avsDecayHistory?.(p,dt);
 p.translate(w/2,h/2);p.rotate(Math.sin(t*.035)*.18);
 p.noFill();p.colorMode(p.HSB,360,100,100,255);
 const R=Math.min(w,h)*.42,n=a.waveform.length;

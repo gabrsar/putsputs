@@ -18,7 +18,7 @@ const wave=u=>{const v=a.waveform||[];return v.length?v[Math.min(v.length-1,Math
 const hint=text=>{p.push();p.resetMatrix();p.colorMode(p.RGB,255);p.noStroke();p.fill(12,17,25,150);p.rect(10,h-29,Math.min(w-20,text.length*6+18),20,5);p.fill(220,225,230,180);p.textFont('monospace');p.textSize(10);p.textAlign(p.LEFT,p.CENTER);p.text(text,18,h-19);p.pop();};
 p.blendMode(p.BLEND);p.colorMode(p.RGB,255);p.rectMode(p.CORNER);p.ellipseMode(p.CENTER);
 
-p.background(5,15,25,255*(1-Math.exp(-dt/.18)));s.style??=0;if(keys.pressed('KeyW'))s.style=1-s.style;if(mouse.clicked)s.source={x:(mouse.nx-.5)*2,y:(mouse.ny-.5)*2};
+p.background(5,15,25,255*(1-Math.exp(-dt/.18)));window.avsDecayHistory?.(p,dt);s.style??=0;if(keys.pressed('KeyW'))s.style=1-s.style;if(mouse.clicked)s.source={x:(mouse.nx-.5)*2,y:(mouse.ny-.5)*2};
 const source=s.source||{x:.4,y:.08},cols=90,rows=64;
 p.colorMode(p.HSB,360,100,100,255);p.noFill();p.strokeWeight(.7);
 for(let row=0;row<rows;row++){
